@@ -1,7 +1,61 @@
+'use client';
+
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { SignedMessage } from '../types/message';
 
 export default function VerifyPage() {
+  const [message, setMessage] = useState('');
+  const [signature, setSignature] = useState('');
+  const [address, setAddress] = useState('');
+  const [selectedNetwork, setSelectedNetwork] = useState<'ethereum' | 'cosmos' | 'polkadot' | ''>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
+
+  const handleImportFromJSON = (jsonString: string) => {
+    try {
+      const signedMessage: SignedMessage = JSON.parse(jsonString);
+      setMessage(signedMessage.message);
+      setSignature(signedMessage.signature);
+      setAddress(signedMessage.address);
+      setSelectedNetwork(signedMessage.network);
+      setError(null);
+    } catch (err) {
+      setError('Invalid JSON format');
+    }
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      handleImportFromJSON(text);
+    } catch (err) {
+      setError('Failed to read clipboard');
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!message || !signature || !address || !selectedNetwork) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setError(null);
+      setIsLoading(true);
+      // TODO: Implement actual verification logic
+      // This is a placeholder for the actual verification
+      setVerificationResult(true);
+    } catch (err) {
+      setError('Verification failed');
+      setVerificationResult(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -12,53 +66,84 @@ export default function VerifyPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {verificationResult !== null && (
+            <div className={`p-4 rounded-md border ${
+              verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            }`}>
+              <p className={`text-sm ${
+                verificationResult ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {verificationResult ? 'Message verified successfully!' : 'Message verification failed'}
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={handlePaste}
+            >
+              Paste from JSON
+            </Button>
+          </div>
+
           <div className="space-y-2">
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-              Original Message
+            <label htmlFor="message" className="block text-sm font-medium text-gray-900">
+              Message
             </label>
             <textarea
               id="message"
-              name="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               rows={4}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Enter the original message here..."
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              placeholder="Enter the message to verify..."
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="signature" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="signature" className="block text-sm font-medium text-gray-900">
               Signature
             </label>
             <textarea
               id="signature"
-              name="signature"
+              value={signature}
+              onChange={(e) => setSignature(e.target.value)}
               rows={4}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Enter the signature here..."
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              placeholder="Enter the signature to verify..."
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-              Signer's Address
+            <label htmlFor="address" className="block text-sm font-medium text-gray-900">
+              Address
             </label>
             <input
               type="text"
               id="address"
-              name="address"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Enter the signer's address here..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              placeholder="Enter the signer's address..."
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="network" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="network" className="block text-sm font-medium text-gray-900">
               Network
             </label>
             <select
               id="network"
-              name="network"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              value={selectedNetwork}
+              onChange={(e) => setSelectedNetwork(e.target.value as 'ethereum' | 'cosmos' | 'polkadot' | '')}
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             >
               <option value="">Select a network</option>
               <option value="ethereum">Ethereum</option>
@@ -68,7 +153,12 @@ export default function VerifyPage() {
           </div>
 
           <div className="flex justify-end">
-            <Button>Verify Message</Button>
+            <Button
+              onClick={handleVerify}
+              disabled={!message || !signature || !address || !selectedNetwork || isLoading}
+            >
+              {isLoading ? 'Verifying...' : 'Verify Message'}
+            </Button>
           </div>
         </CardContent>
       </Card>

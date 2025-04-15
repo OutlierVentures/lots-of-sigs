@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useWallet } from '../providers/WalletProvider';
 import { NetworkType } from '../types/wallet';
+import { SignedMessage } from '../types/message';
 
 export default function SignPage() {
   const { isConnected, address, network, error, actions } = useWallet();
@@ -51,6 +52,20 @@ export default function SignPage() {
     }
   };
 
+  const handleCopyToClipboard = () => {
+    if (!signature || !address || !network) return;
+
+    const signedMessage: SignedMessage = {
+      message,
+      signature,
+      address,
+      network: network as 'ethereum' | 'cosmos' | 'polkadot',
+      timestamp: Date.now(),
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(signedMessage, null, 2));
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -68,7 +83,7 @@ export default function SignPage() {
           )}
 
           <div className="space-y-2">
-            <label htmlFor="message" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="message" className="block text-sm font-medium text-gray-900">
               Message to Sign
             </label>
             <textarea
@@ -76,20 +91,20 @@ export default function SignPage() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={4}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               placeholder="Enter your message here..."
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="network" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="network" className="block text-sm font-medium text-gray-900">
               Network
             </label>
             <select
               id="network"
               value={selectedNetwork}
               onChange={(e) => setSelectedNetwork(e.target.value as NetworkType | '')}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               disabled={isConnected}
             >
               <option value="">Select a network</option>
@@ -101,10 +116,10 @@ export default function SignPage() {
 
           {isConnected && (
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-900">
                 Connected Address
               </label>
-              <div className="text-sm text-gray-900 font-mono break-all">
+              <div className="text-sm text-gray-900 font-mono break-all p-3 bg-gray-50 rounded-md border border-gray-200">
                 {address}
               </div>
             </div>
@@ -112,10 +127,19 @@ export default function SignPage() {
 
           {signature && (
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Signature
-              </label>
-              <div className="text-sm text-gray-900 font-mono break-all p-4 bg-gray-50 rounded-md">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-900">
+                  Signature
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyToClipboard}
+                >
+                  Copy as JSON
+                </Button>
+              </div>
+              <div className="text-sm text-gray-900 font-mono break-all p-3 bg-gray-50 rounded-md border border-gray-200">
                 {signature}
               </div>
             </div>

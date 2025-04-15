@@ -20,6 +20,12 @@
 - [x] Add connection state management
 - [x] Create wallet connection UI
 
+### Message Handling
+- [x] Implement basic message signing
+- [ ] Implement message verification
+- [ ] Add JSON export/import for signed messages
+- [ ] Add copy/paste functionality for signed messages
+
 ## Phase 2: EVM Network Support
 ### EVM Wallet Integration
 - [x] Implement Web3.js integration
@@ -144,9 +150,10 @@
 - [ ] Update documentation
 
 ## Current Focus
-- Phase 2: EVM Network Support
-  - Adding WalletConnect support
-  - Testing wallet connections
+- Phase 1: Core Infrastructure
+  - Implementing message verification
+  - Adding JSON export/import functionality
+  - Improving message sharing UX
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -160,6 +167,7 @@
 - Basic wallet connection functionality
 - MetaMask integration
 - Message signing with Ethereum
+- Improved form styling and UX
 
 ## Blockers
 - None identified yet
