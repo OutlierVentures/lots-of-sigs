@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWallet } from '../providers/WalletProvider';
 import { NetworkType, WalletType } from '../types/wallet';
 import { SignedMessage } from '../types/message';
@@ -16,12 +16,21 @@ export default function SignPage() {
   const [signedMessage, setSignedMessage] = useState<string>('');
   const [walletType, setWalletType] = useState<WalletType>('metamask');
 
+  // Update error state when wallet error changes
+  useEffect(() => {
+    if (walletError) {
+      setError(walletError);
+    }
+  }, [walletError]);
+
   const handleConnect = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log('Connecting to wallet:', { selectedNetwork, walletType });
       await actions.connect(selectedNetwork, walletType);
     } catch (err) {
+      console.error('Failed to connect wallet:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect wallet');
     } finally {
       setIsLoading(false);
@@ -50,6 +59,7 @@ export default function SignPage() {
       };
       setSignedMessage(JSON.stringify(signedMessageObj, null, 2));
     } catch (err) {
+      console.error('Failed to sign message:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign message');
     } finally {
       setIsLoading(false);
@@ -64,6 +74,7 @@ export default function SignPage() {
       setSignature('');
       setSignedMessage('');
     } catch (err) {
+      console.error('Failed to disconnect wallet:', err);
       setError(err instanceof Error ? err.message : 'Failed to disconnect wallet');
     } finally {
       setIsLoading(false);
@@ -99,6 +110,12 @@ export default function SignPage() {
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign Message</h1>
         
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-2">Network Type</label>
           <select
@@ -199,22 +216,12 @@ export default function SignPage() {
                       Copy
                     </Button>
                   </div>
-                  <textarea
-                    value={signedMessage}
-                    onChange={(e) => setSignedMessage(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 font-mono text-gray-900"
-                    rows={6}
-                    readOnly
-                  />
+                  <pre className="p-4 bg-gray-50 rounded-md text-sm font-mono break-all text-gray-900">
+                    {signedMessage}
+                  </pre>
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {(error || walletError) && (
-          <div className="mt-4 p-4 bg-red-50 rounded-md">
-            <p className="text-sm text-red-700">{error || walletError}</p>
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ export interface WalletState {
   address: string | null;
   network: NetworkType | null;
   chainId?: number;
+  error: string | null;
 }
 
 export interface WalletActions {
@@ -15,6 +16,5 @@ export interface WalletActions {
 }
 
 export interface WalletContextType extends WalletState {
-  error: string | null;
   actions: WalletActions;
 } 

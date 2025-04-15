@@ -1,15 +1,12 @@
-import type { Metadata } from "next";
+'use client';
+
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { BaseLayout } from "./components/layout/BaseLayout";
-import { WalletProvider } from "./providers/WalletProvider";
+import { ClientWalletProvider } from "./providers/ClientWalletProvider";
+import { Suspense } from 'react';
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Blockchain Message Signer",
-  description: "Sign and verify messages using blockchain wallets",
-};
 
 export default function RootLayout({
   children,
@@ -19,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <WalletProvider>
-          <BaseLayout>{children}</BaseLayout>
-        </WalletProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <ClientWalletProvider>
+            <BaseLayout>{children}</BaseLayout>
+          </ClientWalletProvider>
+        </Suspense>
       </body>
     </html>
   );

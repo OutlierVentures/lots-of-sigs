@@ -1,46 +1,66 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
-import { NetworkType, WalletContextType, WalletState, WalletType } from '../types/wallet';
+import { SignedMessage } from '../types/message';
 import { createWalletConnectProvider } from '../config/walletConnect';
-import { EthereumProvider } from '@walletconnect/ethereum-provider';
-import { walletConnectConfig } from '../config/walletConnect';
-import { makeADR36AminoSignDoc } from '@cosmjs/amino';
+import { NetworkType, WalletType, WalletContextType, WalletState } from '../types/wallet';
 
 const initialState: WalletState = {
   isConnected: false,
   address: null,
   network: null,
-  chainId: undefined,
+  error: null,
 };
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
+export function WalletProvider({ children }: { children: ReactNode }) {
+  console.log('WalletProvider: Component mounted');
+  
   const [state, setState] = useState<WalletState>(initialState);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [walletConnectProvider, setWalletConnectProvider] = useState<any>(null);
-  const [isWalletConnect, setIsWalletConnect] = useState(false);
+  const [isWalletConnectInitialized, setIsWalletConnectInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
+    console.log('WalletProvider: useEffect triggered');
+    let mounted = true;
+
     const initWalletConnect = async () => {
       try {
+        console.log('WalletProvider: Creating WalletConnect provider');
         const provider = await createWalletConnectProvider();
-        setWalletConnectProvider(provider);
+        console.log('WalletProvider: WalletConnect provider created', provider);
+        
+        if (mounted) {
+          setWalletConnectProvider(provider);
+          setIsWalletConnectInitialized(true);
 
-        // Handle WalletConnect events
-        provider.on('accountsChanged', handleAccountsChanged);
-        provider.on('chainChanged', handleChainChanged);
-        provider.on('disconnect', handleDisconnect);
+          // Handle WalletConnect events
+          provider.on('accountsChanged', handleAccountsChanged);
+          provider.on('chainChanged', handleChainChanged);
+          provider.on('disconnect', handleDisconnect);
+          console.log('WalletProvider: WalletConnect event listeners set up');
+        }
       } catch (err) {
-        console.error('Failed to initialize WalletConnect:', err);
+        console.error('WalletProvider: Failed to initialize WalletConnect:', err);
+        if (mounted) {
+          setState(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to initialize WalletConnect' }));
+        }
+      } finally {
+        if (mounted) {
+          setIsInitializing(false);
+        }
       }
     };
+
     initWalletConnect();
 
     return () => {
+      mounted = false;
+      console.log('WalletProvider: Cleaning up WalletConnect provider');
       if (walletConnectProvider) {
         walletConnectProvider.removeListener('accountsChanged', handleAccountsChanged);
         walletConnectProvider.removeListener('chainChanged', handleChainChanged);
@@ -50,6 +70,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const handleAccountsChanged = (accounts: string[]) => {
+    console.log('WalletProvider: Accounts changed', accounts);
     if (accounts.length === 0) {
       handleDisconnect();
     } else {
@@ -58,216 +79,193 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleChainChanged = (chainId: string) => {
+    console.log('WalletProvider: Chain changed', chainId);
     setState(prev => ({ ...prev, chainId: Number(chainId) }));
   };
 
   const handleDisconnect = () => {
+    console.log('WalletProvider: Handling disconnect');
     setState(initialState);
     setSigner(null);
-    setIsWalletConnect(false);
   };
 
-  const connectWithMetaMask = async () => {
-    if (!window.ethereum) {
-      throw new Error('MetaMask is not installed');
-    }
-
-    const provider = new BrowserProvider(window.ethereum);
-    const accounts = await provider.send('eth_requestAccounts', []);
-    const newSigner = await provider.getSigner();
-    const chainId = await provider.getNetwork().then(net => net.chainId);
-    
-    setState({
-      isConnected: true,
-      address: accounts[0],
-      network: 'ethereum',
-      chainId: Number(chainId),
-    });
-    
-    setSigner(newSigner);
-    setIsWalletConnect(false);
-  };
-
-  const connectWithWalletConnect = async () => {
-    if (!walletConnectProvider) {
-      throw new Error('WalletConnect is not initialized');
-    }
-
-    await walletConnectProvider.connect();
-    const provider = new BrowserProvider(walletConnectProvider);
-    const accounts = await walletConnectProvider.request({ method: 'eth_accounts' }) as string[];
-    const newSigner = await provider.getSigner();
-    const chainId = await provider.getNetwork().then(net => net.chainId);
-    
-    setState({
-      isConnected: true,
-      address: accounts[0],
-      network: 'ethereum',
-      chainId: Number(chainId),
-    });
-    
-    setSigner(newSigner);
-    setIsWalletConnect(true);
-  };
-
-  const connectWithKeplr = async () => {
-    if (!window.keplr) {
-      throw new Error('Keplr is not installed');
-    }
-
+  const connect = async (network: NetworkType, walletType: WalletType = 'metamask') => {
+    console.log('WalletProvider: Connecting wallet', { network, walletType });
     try {
-      // Request connection to Cosmos Hub
-      await window.keplr.enable('cosmoshub-4');
+      setState(prev => ({ ...prev, error: null }));
       
-      // Get the offline signer
-      const offlineSigner = window.keplr.getOfflineSigner('cosmoshub-4');
-      
-      // Get the first account
-      const accounts = await offlineSigner.getAccounts();
-      
-      // Get the chain info
-      const key = await window.keplr.getKey('cosmoshub-4');
-      
-      setState({
-        isConnected: true,
-        address: accounts[0].address,
-        network: 'cosmos',
-        chainId: undefined, // Cosmos doesn't use chainId in the same way as EVM
-      });
-      
-      // Store both the signer and chain info
-      setSigner({
-        signer: offlineSigner,
-        chainId: 'cosmoshub-4',
-        address: accounts[0].address
-      } as any);
-    } catch (error) {
-      console.error('Failed to connect with Keplr:', error);
-      throw new Error('Failed to connect with Keplr');
-    }
-  };
+      if (isInitializing) {
+        throw new Error('Wallet provider is still initializing. Please try again in a moment.');
+      }
 
-  const connect = async (network: NetworkType, walletType?: WalletType) => {
-    try {
-      setError(null);
+      if (network === 'cosmos') {
+        console.log('WalletProvider: Connecting to Cosmos network');
+        // Check if Keplr is installed
+        if (!window.keplr) {
+          console.error('WalletProvider: Keplr not found');
+          throw new Error('Please install Keplr extension');
+        }
 
-      switch (network) {
-        case 'ethereum':
-          if (walletType === 'walletconnect') {
-            await connectWithWalletConnect();
-          } else {
-            await connectWithMetaMask();
+        // Enable Keplr for Cosmos Hub
+        console.log('WalletProvider: Enabling Keplr for cosmoshub-4');
+        await window.keplr.enable('cosmoshub-4');
+        
+        // Get the offline signer
+        console.log('WalletProvider: Getting offline signer');
+        const offlineSigner = window.keplr.getOfflineSigner('cosmoshub-4');
+        if (!offlineSigner) {
+          console.error('WalletProvider: Failed to get offline signer');
+          throw new Error('Failed to get offline signer from Keplr');
+        }
+
+        // Get the first account
+        console.log('WalletProvider: Getting accounts');
+        const accounts = await offlineSigner.getAccounts();
+        if (!accounts || accounts.length === 0) {
+          console.error('WalletProvider: No accounts found');
+          throw new Error('No accounts found in Keplr');
+        }
+        
+        console.log('WalletProvider: Setting state for Cosmos connection');
+        setState({
+          isConnected: true,
+          address: accounts[0].address,
+          network: 'cosmos',
+          error: null,
+        });
+      } else if (network === 'ethereum') {
+        console.log('WalletProvider: Connecting to Ethereum network');
+        if (walletType === 'walletconnect') {
+          console.log('WalletProvider: Using WalletConnect');
+          if (!isWalletConnectInitialized) {
+            console.error('WalletProvider: WalletConnect not initialized');
+            throw new Error('WalletConnect is not ready yet. Please try again in a moment.');
           }
-          break;
-        case 'cosmos':
-          if (walletType === 'keplr') {
-            await connectWithKeplr();
-          } else {
-            throw new Error('Only Keplr is supported for Cosmos');
+
+          if (!walletConnectProvider) {
+            console.error('WalletProvider: WalletConnect provider not initialized');
+            throw new Error('WalletConnect provider not initialized');
           }
-          break;
-        case 'polkadot':
-          throw new Error('Polkadot support not implemented yet');
-        default:
-          throw new Error('Unsupported network');
+
+          // Connect to WalletConnect
+          console.log('WalletProvider: Connecting to WalletConnect');
+          await walletConnectProvider.connect();
+          console.log('WalletProvider: Requesting accounts');
+          const accounts = await walletConnectProvider.request({ method: 'eth_accounts' });
+          console.log('WalletProvider: Got accounts', accounts);
+          
+          if (!accounts || accounts.length === 0) {
+            console.error('WalletProvider: No accounts found in WalletConnect');
+            throw new Error('No accounts found in WalletConnect');
+          }
+
+          // Create provider and signer
+          console.log('WalletProvider: Creating provider and signer');
+          const provider = new BrowserProvider(walletConnectProvider);
+          const ethSigner = await provider.getSigner();
+          
+          setSigner(ethSigner);
+          setState({
+            isConnected: true,
+            address: accounts[0],
+            network: 'ethereum',
+            error: null,
+          });
+        } else {
+          console.log('WalletProvider: Using MetaMask');
+          // Check if MetaMask is installed
+          if (!window.ethereum) {
+            console.error('WalletProvider: MetaMask not found');
+            throw new Error('Please install MetaMask');
+          }
+
+          // Request account access
+          console.log('WalletProvider: Requesting accounts from MetaMask');
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+          });
+          console.log('WalletProvider: Got accounts from MetaMask', accounts);
+          
+          if (!accounts || accounts.length === 0) {
+            console.error('WalletProvider: No accounts found in MetaMask');
+            throw new Error('No accounts found in MetaMask');
+          }
+
+          // Create provider and signer
+          console.log('WalletProvider: Creating provider and signer for MetaMask');
+          const provider = new BrowserProvider(window.ethereum);
+          const ethSigner = await provider.getSigner();
+          
+          setSigner(ethSigner);
+          setState({
+            isConnected: true,
+            address: accounts[0],
+            network: 'ethereum',
+            error: null,
+          });
+        }
+      } else {
+        console.error('WalletProvider: Network not supported', network);
+        throw new Error('Network not supported yet');
       }
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      setError('Failed to connect wallet. Please try again.');
-      throw error;
+      console.error('WalletProvider: Failed to connect wallet:', error);
+      setState(prev => ({
+        ...initialState,
+        error: error instanceof Error ? error.message : 'Failed to connect wallet',
+      }));
     }
   };
 
   const disconnect = async () => {
-    try {
-      setError(null);
-      if (isWalletConnect && walletConnectProvider?.connected) {
-        await walletConnectProvider.disconnect();
-      }
-      setState(initialState);
-      setSigner(null);
-      setIsWalletConnect(false);
-    } catch (error) {
-      console.error('Failed to disconnect:', error);
-      setError('Failed to disconnect wallet. Please try again.');
+    console.log('WalletProvider: Disconnecting wallet', { network: state.network });
+    if (state.network === 'ethereum' && walletConnectProvider) {
+      console.log('WalletProvider: Disconnecting WalletConnect');
+      await walletConnectProvider.disconnect();
     }
+    setSigner(null);
+    setState(initialState);
   };
 
-  const signMessage = async (message: string) => {
-    if (!signer || !state.isConnected) {
-      setError('Wallet not connected');
+  const signMessage = async (message: string): Promise<string> => {
+    console.log('WalletProvider: Signing message', { network: state.network });
+    if (!state.isConnected || !state.address) {
+      console.error('WalletProvider: Wallet not connected');
       throw new Error('Wallet not connected');
     }
 
     try {
-      setError(null);
-      
       if (state.network === 'cosmos') {
+        console.log('WalletProvider: Using Keplr to sign message');
         if (!window.keplr) {
-          throw new Error('Keplr is not available');
+          console.error('WalletProvider: Keplr not connected');
+          throw new Error('Keplr not connected');
         }
 
-        try {
-          const chainId = 'cosmoshub-4';
-          
-          // Get the signer's address
-          const offlineSigner = window.keplr.getOfflineSigner(chainId);
-          const accounts = await offlineSigner.getAccounts();
-          const signerAddress = accounts[0].address;
+        // Use Keplr's signArbitrary for ADR-36 signing
+        const signResponse = await window.keplr.signArbitrary(
+          'cosmoshub-4',
+          state.address,
+          message
+        );
 
-          // Use signArbitrary for ADR-36 signing
-          const signature = await window.keplr.signArbitrary(
-            chainId,
-            signerAddress,
-            message
-          );
-
-          // Create the sign document for verification
-          const signDoc = {
-            chain_id: '',
-            account_number: '0',
-            sequence: '0',
-            fee: {
-              gas: '0',
-              amount: []
-            },
-            msgs: [
-              {
-                type: 'sign/MsgSignData',
-                value: {
-                  signer: signerAddress,
-                  data: Buffer.from(message).toString('base64')
-                }
-              }
-            ],
-            memo: ''
-          };
-
-          // Return the complete signature object
-          return JSON.stringify({
-            signature: signature.signature,
-            pub_key: signature.pub_key,
-            sign_doc: signDoc
-          });
-        } catch (signError) {
-          console.error('Signing error:', signError);
-          throw new Error('Failed to sign message with Keplr');
-        }
-      } else {
+        return JSON.stringify(signResponse);
+      } else if (state.network === 'ethereum' && signer) {
+        console.log('WalletProvider: Using Ethereum signer to sign message');
         // For EVM chains, use the standard signMessage
-        const signature = await signer.signMessage(message);
-        return signature;
+        return await signer.signMessage(message);
+      } else {
+        console.error('WalletProvider: Network not supported for signing', state.network);
+        throw new Error('Network not supported');
       }
     } catch (error) {
-      console.error('Failed to sign message:', error);
-      setError('Failed to sign message. Please try again.');
+      console.error('WalletProvider: Error signing message:', error);
       throw error;
     }
   };
 
-  const value = {
+  const value: WalletContextType = {
     ...state,
-    error,
     actions: {
       connect,
       disconnect,
@@ -283,6 +281,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useWallet() {
+  console.log('useWallet: Hook called');
   const context = useContext(WalletContext);
   if (context === undefined) {
     throw new Error('useWallet must be used within a WalletProvider');

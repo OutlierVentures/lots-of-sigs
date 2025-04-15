@@ -8,13 +8,9 @@ import { Textarea } from '../components/ui/Textarea';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select';
-import { fromBase64, toBech32 } from '@cosmjs/encoding';
 import { verifyMessage } from 'ethers';
 import { SignedMessage } from '../types/message';
-import { Pubkey } from '@cosmjs/amino';
-import { Secp256k1, ExtendedSecp256k1Signature, ripemd160 } from '@cosmjs/crypto';
-import { sha256 } from '@cosmjs/crypto';
-import { verifyADR36Amino } from '@cosmjs/amino';
+import { verifySignature, extractMessage } from '../../lib/cosmos/signing';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -66,6 +62,7 @@ export default function VerifyPage() {
   const handleVerify = async () => {
     setError('');
     setVerificationResult(null);
+    setIsLoading(true);
 
     try {
       let parsedJson;
@@ -91,48 +88,18 @@ export default function VerifyPage() {
             throw new Error('Invalid signature format: missing required fields');
           }
 
-          // Decode the signature and public key
-          const sigBytes = fromBase64(sigJson.signature);
-          const pubKeyBytes = fromBase64(sigJson.pub_key.value);
-          console.log('Signature bytes length:', sigBytes.length);
-          console.log('Public key bytes length:', pubKeyBytes.length);
-
-          // Create the message hash according to ADR-36
-          const signDoc = sigJson.sign_doc;
-          const messageHash = sha256(new TextEncoder().encode(JSON.stringify(signDoc)));
-          console.log('Message hash:', Buffer.from(messageHash).toString('hex'));
-
-          // Create the signature object with the correct format
-          const r = sigBytes.slice(0, 32);
-          const s = sigBytes.slice(32, 64);
-          console.log('Signature components:', {
-            r: Buffer.from(r).toString('hex'),
-            s: Buffer.from(s).toString('hex')
-          });
-
-          // Create the signature object using the correct constructor
-          const sig = new ExtendedSecp256k1Signature(r, s, 0);
-          console.log('Created signature object:', sig);
-
-          // Verify the signature using Secp256k1
-          const isValid = await Secp256k1.verifySignature(
-            sig,
-            messageHash,
-            pubKeyBytes
-          );
-          console.log('Signature verification result:', isValid);
-
-          // Verify the address matches the public key
-          const pubKeyHash = ripemd160(sha256(pubKeyBytes));
-          const derivedAddress = toBech32('cosmos', pubKeyHash);
-          console.log('Derived address:', derivedAddress);
-          console.log('Expected address:', address);
-          
-          if (derivedAddress !== address) {
-            throw new Error('Address does not match the public key');
-          }
-
+          // Verify the signature using our utility module
+          const isValid = await verifySignature(sigJson, address);
           setVerificationResult(isValid);
+
+          if (isValid) {
+            // Extract and verify the original message
+            const extractedMessage = extractMessage(sigJson.sign_doc);
+            if (extractedMessage !== message) {
+              setError('Message mismatch: The signed message does not match the provided message');
+              setVerificationResult(false);
+            }
+          }
         } catch (e) {
           console.error('Verification error:', e);
           setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
@@ -148,6 +115,8 @@ export default function VerifyPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed');
       setVerificationResult(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
