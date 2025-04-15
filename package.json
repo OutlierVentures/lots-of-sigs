@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cosmjs/amino": "^0.33.1",
+    "@cosmjs/crypto": "^0.33.1",
+    "@cosmjs/encoding": "^0.33.1",
+    "@cosmjs/stargate": "^0.33.1",
     "@walletconnect/ethereum-provider": "^2.19.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -3,5 +3,5 @@ export interface SignedMessage {
   signature: string;
   address: string;
   network: 'ethereum' | 'cosmos' | 'polkadot';
-  timestamp?: number;
+  timestamp: string;
 } 

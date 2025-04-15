@@ -1,4 +1,5 @@
 export type NetworkType = 'ethereum' | 'cosmos' | 'polkadot';
+export type WalletType = 'metamask' | 'walletconnect' | 'keplr';
 
 export interface WalletState {
   isConnected: boolean;
@@ -8,7 +9,7 @@ export interface WalletState {
 }
 
 export interface WalletActions {
-  connect: (network: NetworkType) => Promise<void>;
+  connect: (network: NetworkType, walletType?: WalletType) => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage: (message: string) => Promise<string>;
 }

@@ -56,25 +56,23 @@
 
 ## Phase 3: Cosmos Network Support
 ### Cosmos Wallet Integration
-- [ ] Implement Cosmos SDK integration
-- [ ] Add Keplr support
-- [ ] Add Cosmostation support
-- [ ] Support other Cosmos wallets
-- [ ] Test wallet connections
+- [x] Implement Cosmos SDK integration
+- [x] Add Keplr support
+- [x] Test wallet connections
 
 ### Message Signing for Cosmos
-- [ ] Implement Cosmos signing
-- [ ] Add message formatting
-- [ ] Support different message types
-- [ ] Add signing UI
-- [ ] Test signing functionality
+- [x] Implement Cosmos signing
+- [x] Add message formatting
+- [x] Support different message types
+- [x] Add signing UI
+- [x] Test signing functionality
 
 ### Message Verification for Cosmos
-- [ ] Implement verification logic
-- [ ] Add verification UI
-- [ ] Support different verification methods
-- [ ] Add verification results display
-- [ ] Test verification functionality
+- [x] Implement verification logic
+- [x] Add verification UI
+- [x] Support different verification methods
+- [x] Add verification results display
+- [ ] Test verification functionality (Current blocker: Signature verification failing)
 
 ### Cosmos Network Testing
 - [ ] Test with Cosmos Hub
@@ -87,8 +85,6 @@
 ### Substrate Wallet Integration
 - [ ] Implement Polkadot.js integration
 - [ ] Add Polkadot.js extension support
-- [ ] Add Talisman support
-- [ ] Support other Substrate wallets
 - [ ] Test wallet connections
 
 ### Message Signing for Substrate
@@ -149,9 +145,9 @@
 - [ ] Update documentation
 
 ## Current Focus
-- Phase 2: EVM Network Support
-  - Adding WalletConnect support
-  - Testing WalletConnect integration
+- Phase 3: Cosmos Network Support
+  - Fixing signature verification for Cosmos messages
+  - Investigating signature format compatibility with Keplr's signArbitrary
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -174,7 +170,9 @@
 - Network compatibility testing
 
 ## Blockers
-- None identified yet
+- Cosmos signature verification is currently failing despite correct address derivation
+- Need to investigate the signature format from Keplr's signArbitrary method
+- Need to verify the message hash calculation for ADR-36
 
 ## Notes
 - Regular testing required for all implementations

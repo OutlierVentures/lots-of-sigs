@@ -1,10 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { SignedMessage } from '../types/message';
+import { Textarea } from '../components/ui/Textarea';
+import { Input } from '../components/ui/Input';
+import { Label } from '../components/ui/Label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/Select';
+import { fromBase64, toBech32 } from '@cosmjs/encoding';
 import { verifyMessage } from 'ethers';
+import { SignedMessage } from '../types/message';
+import { Pubkey } from '@cosmjs/amino';
+import { Secp256k1, ExtendedSecp256k1Signature, ripemd160 } from '@cosmjs/crypto';
+import { sha256 } from '@cosmjs/crypto';
+import { verifyADR36Amino } from '@cosmjs/amino';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -43,30 +53,101 @@ export default function VerifyPage() {
     }
   };
 
-  const handleVerify = async () => {
-    if (!message || !signature || !address || !selectedNetwork) {
-      setError('Please fill in all fields');
-      return;
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      handleImportFromJSON(text);
+      setJsonInput(text);
+    } catch (err) {
+      console.error('Failed to paste text:', err);
     }
+  };
+
+  const handleVerify = async () => {
+    setError('');
+    setVerificationResult(null);
 
     try {
-      setError(null);
-      setIsLoading(true);
+      let parsedJson;
+      try {
+        parsedJson = JSON.parse(jsonInput);
+        console.log('Parsed JSON:', parsedJson);
+      } catch (e) {
+        throw new Error('Invalid JSON format');
+      }
 
-      if (selectedNetwork === 'ethereum') {
+      const { message, signature, address } = parsedJson;
+      if (!message || !signature || !address) {
+        throw new Error('JSON must contain message, signature, and address fields');
+      }
+
+      if (selectedNetwork === 'cosmos') {
+        try {
+          // Parse the signature JSON
+          const sigJson = JSON.parse(signature);
+          console.log('Parsed signature JSON:', sigJson);
+          
+          if (!sigJson.signature || !sigJson.pub_key || !sigJson.sign_doc) {
+            throw new Error('Invalid signature format: missing required fields');
+          }
+
+          // Decode the signature and public key
+          const sigBytes = fromBase64(sigJson.signature);
+          const pubKeyBytes = fromBase64(sigJson.pub_key.value);
+          console.log('Signature bytes length:', sigBytes.length);
+          console.log('Public key bytes length:', pubKeyBytes.length);
+
+          // Create the message hash according to ADR-36
+          const signDoc = sigJson.sign_doc;
+          const messageHash = sha256(new TextEncoder().encode(JSON.stringify(signDoc)));
+          console.log('Message hash:', Buffer.from(messageHash).toString('hex'));
+
+          // Create the signature object with the correct format
+          const r = sigBytes.slice(0, 32);
+          const s = sigBytes.slice(32, 64);
+          console.log('Signature components:', {
+            r: Buffer.from(r).toString('hex'),
+            s: Buffer.from(s).toString('hex')
+          });
+
+          // Create the signature object using the correct constructor
+          const sig = new ExtendedSecp256k1Signature(r, s, 0);
+          console.log('Created signature object:', sig);
+
+          // Verify the signature using Secp256k1
+          const isValid = await Secp256k1.verifySignature(
+            sig,
+            messageHash,
+            pubKeyBytes
+          );
+          console.log('Signature verification result:', isValid);
+
+          // Verify the address matches the public key
+          const pubKeyHash = ripemd160(sha256(pubKeyBytes));
+          const derivedAddress = toBech32('cosmos', pubKeyHash);
+          console.log('Derived address:', derivedAddress);
+          console.log('Expected address:', address);
+          
+          if (derivedAddress !== address) {
+            throw new Error('Address does not match the public key');
+          }
+
+          setVerificationResult(isValid);
+        } catch (e) {
+          console.error('Verification error:', e);
+          setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+          setVerificationResult(false);
+        }
+      } else if (selectedNetwork === 'ethereum') {
         // Verify the message using ethers.js
         const recoveredAddress = verifyMessage(message, signature);
         setVerificationResult(recoveredAddress.toLowerCase() === address.toLowerCase());
       } else {
-        setError(`${selectedNetwork} verification not implemented yet`);
-        setVerificationResult(false);
+        throw new Error(`${selectedNetwork} verification not implemented yet`);
       }
     } catch (err) {
-      console.error('Verification failed:', err);
-      setError('Verification failed. Please check your inputs.');
+      setError(err instanceof Error ? err.message : 'Verification failed');
       setVerificationResult(false);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -74,8 +155,8 @@ export default function VerifyPage() {
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <h1 className="text-2xl font-semibold">Verify Message</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-semibold text-gray-900">Verify Message</h1>
+          <p className="text-sm text-gray-900">
             Verify a signed message to confirm its authenticity
           </p>
         </CardHeader>
@@ -99,9 +180,18 @@ export default function VerifyPage() {
           )}
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">
-              Paste Signed Message JSON
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="block text-sm font-medium text-gray-900">
+                Paste Signed Message JSON
+              </label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePaste()}
+              >
+                Paste
+              </Button>
+            </div>
             <textarea
               value={jsonInput}
               onChange={handleJsonInputChange}
@@ -134,7 +224,7 @@ export default function VerifyPage() {
               value={signature}
               onChange={(e) => setSignature(e.target.value)}
               rows={4}
-              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono"
               placeholder="Enter the signature to verify..."
             />
           </div>
