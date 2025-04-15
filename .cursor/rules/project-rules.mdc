@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Test when finished implementing
+
+Whenever you're done implementing something, run the tests. Verify that no tests are failing.
+Adapt the tests and/or the code to make sure the tests pass. Follow the instructions in README.md
+and package.json for the correct commands for running the tests.
+
+# Project documents
+These are the project documents. Update them after every change:
+
+README.md - description for end users
+PROJECT_PLAN.md - high level overview of the project
+PROJECT_STATUS.md - detailed phases and todos per phase
+
+Never use specific dates or timelines for planned phases or features.
+
+# Git commits
+
+Never do a git commit directly from the chat. The user will do that manually.
+
+# Running the application
+
+Never try to run the application directly from the chat. The user will do that manually.
