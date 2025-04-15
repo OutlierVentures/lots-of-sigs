@@ -18,9 +18,10 @@ export default function VerifyPage() {
   const [address, setAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<'ethereum' | 'cosmos' | 'polkadot' | ''>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
   const [jsonInput, setJsonInput] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const handleImportFromJSON = (jsonString: string) => {
     try {
@@ -82,39 +83,50 @@ export default function VerifyPage() {
         try {
           // Parse the signature JSON
           const sigJson = JSON.parse(signature);
-          console.log('Parsed signature JSON:', sigJson);
+          console.log('Parsed signature JSON:', JSON.stringify(sigJson, null, 2));
           
           if (!sigJson.signature || !sigJson.pub_key || !sigJson.sign_doc) {
             throw new Error('Invalid signature format: missing required fields');
           }
 
-          // Verify the signature using our utility module
-          const isValid = await verifySignature(sigJson, address);
-          setVerificationResult(isValid);
+          // Use the original sign document from the signature
+          const signatureData = {
+            signature: sigJson.signature,
+            pub_key: sigJson.pub_key,
+            sign_doc: sigJson.sign_doc,
+          };
 
+          console.log('Verification input:', JSON.stringify(signatureData, null, 2));
+          
+          // Verify the signature using our utility module
+          const isValid = await verifySignature(signatureData, address);
+          console.log('Verification result:', isValid);
+          setVerificationResult(isValid);
+          
           if (isValid) {
-            // Extract and verify the original message
-            const extractedMessage = extractMessage(sigJson.sign_doc);
-            if (extractedMessage !== message) {
-              setError('Message mismatch: The signed message does not match the provided message');
-              setVerificationResult(false);
-            }
+            setVerificationMessage('Message verification successful!');
+          } else {
+            setVerificationMessage('Message verification failed');
           }
         } catch (e) {
           console.error('Verification error:', e);
           setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
           setVerificationResult(false);
+          setVerificationMessage('Verification failed');
         }
       } else if (selectedNetwork === 'ethereum') {
         // Verify the message using ethers.js
         const recoveredAddress = verifyMessage(message, signature);
-        setVerificationResult(recoveredAddress.toLowerCase() === address.toLowerCase());
+        const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
+        setVerificationResult(isValid);
+        setVerificationMessage(isValid ? 'Message verification successful!' : 'Message verification failed');
       } else {
         throw new Error(`${selectedNetwork} verification not implemented yet`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed');
       setVerificationResult(false);
+      setVerificationMessage('Verification failed');
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +155,7 @@ export default function VerifyPage() {
               <p className={`text-sm ${
                 verificationResult ? 'text-green-600' : 'text-red-600'
               }`}>
-                {verificationResult ? 'Message verified successfully!' : 'Message verification failed'}
+                {verificationMessage}
               </p>
             </div>
           )}

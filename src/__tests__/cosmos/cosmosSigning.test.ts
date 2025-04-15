@@ -98,4 +98,41 @@ describe('Cosmos Signing and Verification', () => {
     const isValid = await verifySignature(signatureData, wrongAddress);
     expect(isValid).toBe(false);
   });
+
+  it('should create a signature in the exact format used by the frontend', async () => {
+    // Generate a random private key
+    const privateKey = new Uint8Array(32);
+    crypto.getRandomValues(privateKey);
+
+    // Get the public key
+    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const pubKeyBytes = publicKey.pubkey;
+
+    // Create a test message
+    const message = 'test message';
+
+    // Create the signature
+    const signatureData = await createSignature(message, privateKey, pubKeyBytes);
+
+    // Get the signer's address
+    const pubKeyHash = ripemd160(sha256(pubKeyBytes));
+    const address = toBech32('cosmos', pubKeyHash);
+
+    // Create the frontend-compatible JSON structure
+    const frontendJson = {
+      message,
+      signature: JSON.stringify(signatureData),
+      address,
+      network: 'cosmos' as const,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Log the JSON string that can be used in the frontend
+    console.log('Frontend-compatible JSON string:');
+    console.log(JSON.stringify(frontendJson, null, 2));
+
+    // Verify that the signature is valid
+    const isValid = await verifySignature(signatureData, address);
+    expect(isValid).toBe(true);
+  });
 }); 

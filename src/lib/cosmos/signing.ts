@@ -49,7 +49,7 @@ export function createSignDoc(message: string, signer: string): SignDoc {
         type: 'sign/MsgSignData',
         value: {
           signer,
-          data: Buffer.from(message).toString('base64'),
+          data: message,
         },
       },
     ],
@@ -104,24 +104,44 @@ export async function verifySignature(
   expectedAddress: string
 ): Promise<boolean> {
   try {
+    console.log('Verifying signature with data:', {
+      signature: signatureData.signature,
+      pub_key: signatureData.pub_key,
+      sign_doc: signatureData.sign_doc,
+      expectedAddress,
+    });
+
     // Parse the signature and public key
     const sigBytes = fromBase64(signatureData.signature);
     const pubKeyBytes = fromBase64(signatureData.pub_key.value);
+    console.log('Parsed bytes:', {
+      sigBytesLength: sigBytes.length,
+      pubKeyBytesLength: pubKeyBytes.length,
+    });
 
     // Create the message hash
-    const messageHash = sha256(
-      new TextEncoder().encode(JSON.stringify(signatureData.sign_doc))
-    );
+    const signDocString = JSON.stringify(signatureData.sign_doc);
+    console.log('Sign doc string:', signDocString);
+    const messageHash = sha256(new TextEncoder().encode(signDocString));
+    console.log('Message hash:', Buffer.from(messageHash).toString('hex'));
 
-    // Create the signature object
+    // Create the signature object with recovery value
+    // The recovery value is the last byte of the signature
+    const recoveryValue = sigBytes[64] || 0;
     const sig = new ExtendedSecp256k1Signature(
       sigBytes.slice(0, 32),
       sigBytes.slice(32, 64),
-      0
+      recoveryValue
     );
+    console.log('Signature object:', {
+      r: Buffer.from(sig.r(32)).toString('hex'),
+      s: Buffer.from(sig.s(32)).toString('hex'),
+      recovery: recoveryValue,
+    });
 
     // Verify the signature
     const isValid = await Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
+    console.log('Signature verification result:', isValid);
     if (!isValid) {
       return false;
     }
@@ -129,6 +149,11 @@ export async function verifySignature(
     // Verify the address matches
     const pubKeyHash = ripemd160(sha256(pubKeyBytes));
     const derivedAddress = toBech32('cosmos', pubKeyHash);
+    console.log('Address verification:', {
+      derivedAddress,
+      expectedAddress,
+      matches: derivedAddress === expectedAddress,
+    });
     return derivedAddress === expectedAddress;
   } catch (error) {
     console.error('Signature verification error:', error);
@@ -142,9 +167,23 @@ export async function verifySignature(
  * @returns The original message
  */
 export function extractMessage(signDoc: SignDoc): string {
-  const base64Data = signDoc.msgs[0]?.value?.data;
-  if (!base64Data) {
+  const messageData = signDoc.msgs[0]?.value?.data;
+  if (!messageData) {
     throw new Error('Invalid sign document: missing message data');
   }
-  return Buffer.from(base64Data, 'base64').toString('utf-8');
+
+  // Check if the data is base64 encoded
+  try {
+    // Try to decode as base64 first
+    const decoded = Buffer.from(messageData, 'base64').toString('utf-8');
+    // If the decoded string contains only printable characters, return it
+    if (/^[\x20-\x7E]*$/.test(decoded)) {
+      return decoded;
+    }
+    // If not, return the original data
+    return messageData;
+  } catch (e) {
+    // If base64 decoding fails, return the original data
+    return messageData;
+  }
 } 

@@ -5,6 +5,8 @@ import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import { SignedMessage } from '../types/message';
 import { createWalletConnectProvider } from '../config/walletConnect';
 import { NetworkType, WalletType, WalletContextType, WalletState } from '../types/wallet';
+import { createSignature, createSignDoc } from '../../lib/cosmos/signing';
+import { hash } from '../../lib/utils';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -242,14 +244,33 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           throw new Error('Keplr not connected');
         }
 
-        // Use Keplr's signArbitrary for ADR-36 signing
-        const signResponse = await window.keplr.signArbitrary(
+        // Get the key from Keplr
+        const key = await window.keplr.getKey('cosmoshub-4');
+        if (!key) {
+          throw new Error('Failed to get key from Keplr');
+        }
+
+        // Create the sign document using our library
+        const signDoc = createSignDoc(message, state.address);
+        console.log('Created sign document:', JSON.stringify(signDoc, null, 2));
+
+        // Use Keplr's signAmino for ADR-36 signing
+        const signResponse = await window.keplr.signAmino(
           'cosmoshub-4',
           state.address,
-          message
+          signDoc
         );
+        console.log('Keplr sign response:', JSON.stringify(signResponse, null, 2));
 
-        return JSON.stringify(signResponse);
+        // Return the complete signature data in the format our verification expects
+        const signatureData = {
+          signature: signResponse.signature.signature,
+          pub_key: signResponse.signature.pub_key,
+          sign_doc: signResponse.signed,
+        };
+        console.log('Final signature data:', JSON.stringify(signatureData, null, 2));
+
+        return JSON.stringify(signatureData);
       } else if (state.network === 'ethereum' && signer) {
         console.log('WalletProvider: Using Ethereum signer to sign message');
         // For EVM chains, use the standard signMessage

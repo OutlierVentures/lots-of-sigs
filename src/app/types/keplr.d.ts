@@ -16,6 +16,33 @@ interface KeplrSignature {
   };
 }
 
+interface AminoSignResponse {
+  signed: {
+    chain_id: string;
+    account_number: string;
+    sequence: string;
+    fee: {
+      gas: string;
+      amount: Array<{ amount: string; denom: string }>;
+    };
+    msgs: Array<{
+      type: string;
+      value: {
+        signer: string;
+        data: string;
+      };
+    }>;
+    memo: string;
+  };
+  signature: {
+    signature: string;
+    pub_key: {
+      type: string;
+      value: string;
+    };
+  };
+}
+
 declare global {
   interface Window {
     keplr?: {
@@ -23,6 +50,7 @@ declare global {
       getOfflineSigner: (chainId: string) => OfflineAminoSigner;
       getKey: (chainId: string) => Promise<KeplrKey>;
       signArbitrary: (chainId: string, signer: string, data: string) => Promise<KeplrSignature>;
+      signAmino: (chainId: string, signer: string, signDoc: any) => Promise<AminoSignResponse>;
     };
   }
 } 
