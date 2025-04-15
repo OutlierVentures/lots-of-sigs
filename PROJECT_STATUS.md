@@ -68,11 +68,15 @@
 - [x] Test signing functionality
 
 ### Message Verification for Cosmos
-- [x] Implement verification logic
-- [x] Add verification UI
-- [x] Support different verification methods
-- [x] Add verification results display
-- [ ] Test verification functionality (Current blocker: Signature verification failing)
+- [x] Add unit test framework
+- [x] Implement direct Cosmos JS signing/verification in tests
+- [x] Verify ADR-36 compliance in tests
+- [ ] Extract signing/verification logic to utility module
+- [ ] Implement verification logic in app
+- [ ] Add verification UI
+- [ ] Support different verification methods
+- [ ] Add verification results display
+- [ ] Test verification functionality in app
 
 ### Cosmos Network Testing
 - [ ] Test with Cosmos Hub
@@ -146,8 +150,9 @@
 
 ## Current Focus
 - Phase 3: Cosmos Network Support
-  - Fixing signature verification for Cosmos messages
-  - Investigating signature format compatibility with Keplr's signArbitrary
+  - Extracting tested signing/verification logic to utility module
+  - Implementing verification in app using tested code
+  - Adding UI for verification results
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -170,12 +175,12 @@
 - Network compatibility testing
 
 ## Blockers
-- Cosmos signature verification is currently failing despite correct address derivation
-- Need to investigate the signature format from Keplr's signArbitrary method
-- Need to verify the message hash calculation for ADR-36
+- None currently: Unit tests are passing for core signing/verification functionality
 
 ## Notes
 - Regular testing required for all implementations
 - Security reviews needed for wallet integrations
 - Documentation updates required for each feature
-- Cross-browser testing needed for all UI components 
+- Cross-browser testing needed for all UI components
+- Unit tests confirm correct ADR-36 implementation
+- Next step is to integrate tested code into the app 
