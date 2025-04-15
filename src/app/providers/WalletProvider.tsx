@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import { NetworkType, WalletContextType, WalletState } from '../types/wallet';
+import { createWalletConnectProvider } from '../config/walletConnect';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -17,19 +18,49 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<WalletState>(initialState);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [walletConnectProvider, setWalletConnectProvider] = useState<any>(null);
+
+  useEffect(() => {
+    const initWalletConnect = async () => {
+      try {
+        const provider = await createWalletConnectProvider();
+        setWalletConnectProvider(provider);
+      } catch (err) {
+        console.error('Failed to initialize WalletConnect:', err);
+      }
+    };
+    initWalletConnect();
+  }, []);
 
   const connect = async (network: NetworkType) => {
     if (network === 'ethereum') {
-      if (!window.ethereum) {
-        setError('MetaMask is not installed');
-        throw new Error('MetaMask is not installed');
-      }
-
       try {
         setError(null);
-        const provider = new BrowserProvider(window.ethereum);
-        const accounts = await provider.send('eth_requestAccounts', []);
-        const newSigner = await provider.getSigner();
+        let provider;
+        let accounts;
+        let newSigner;
+
+        if (walletConnectProvider?.connected) {
+          // Use WalletConnect if already connected
+          provider = new BrowserProvider(walletConnectProvider);
+          accounts = await walletConnectProvider.request({ method: 'eth_accounts' });
+          newSigner = await provider.getSigner();
+        } else if (window.ethereum) {
+          // Use MetaMask
+          provider = new BrowserProvider(window.ethereum);
+          accounts = await provider.send('eth_requestAccounts', []);
+          newSigner = await provider.getSigner();
+        } else {
+          // Try WalletConnect
+          if (!walletConnectProvider) {
+            throw new Error('No wallet provider available');
+          }
+          await walletConnectProvider.connect();
+          provider = new BrowserProvider(walletConnectProvider);
+          accounts = await walletConnectProvider.request({ method: 'eth_accounts' });
+          newSigner = await provider.getSigner();
+        }
+
         const chainId = await provider.getNetwork().then(net => net.chainId);
         
         setState({
@@ -55,6 +86,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const disconnect = async () => {
     try {
       setError(null);
+      if (walletConnectProvider?.connected) {
+        await walletConnectProvider.disconnect();
+      }
       setState(initialState);
       setSigner(null);
     } catch (error) {

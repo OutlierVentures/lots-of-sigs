@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { SignedMessage } from '../types/message';
+import { verifyMessage } from 'ethers';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -13,6 +14,7 @@ export default function VerifyPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
+  const [jsonInput, setJsonInput] = useState('');
 
   const handleImportFromJSON = (jsonString: string) => {
     try {
@@ -27,12 +29,17 @@ export default function VerifyPage() {
     }
   };
 
-  const handlePaste = async () => {
+  const handleJsonInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setJsonInput(e.target.value);
     try {
-      const text = await navigator.clipboard.readText();
-      handleImportFromJSON(text);
+      const signedMessage: SignedMessage = JSON.parse(e.target.value);
+      setMessage(signedMessage.message);
+      setSignature(signedMessage.signature);
+      setAddress(signedMessage.address);
+      setSelectedNetwork(signedMessage.network);
+      setError(null);
     } catch (err) {
-      setError('Failed to read clipboard');
+      // Don't show error while typing
     }
   };
 
@@ -45,11 +52,18 @@ export default function VerifyPage() {
     try {
       setError(null);
       setIsLoading(true);
-      // TODO: Implement actual verification logic
-      // This is a placeholder for the actual verification
-      setVerificationResult(true);
+
+      if (selectedNetwork === 'ethereum') {
+        // Verify the message using ethers.js
+        const recoveredAddress = verifyMessage(message, signature);
+        setVerificationResult(recoveredAddress.toLowerCase() === address.toLowerCase());
+      } else {
+        setError(`${selectedNetwork} verification not implemented yet`);
+        setVerificationResult(false);
+      }
     } catch (err) {
-      setError('Verification failed');
+      console.error('Verification failed:', err);
+      setError('Verification failed. Please check your inputs.');
       setVerificationResult(false);
     } finally {
       setIsLoading(false);
@@ -84,13 +98,17 @@ export default function VerifyPage() {
             </div>
           )}
 
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={handlePaste}
-            >
-              Paste from JSON
-            </Button>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-900">
+              Paste Signed Message JSON
+            </label>
+            <textarea
+              value={jsonInput}
+              onChange={handleJsonInputChange}
+              rows={8}
+              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono"
+              placeholder="Paste your signed message JSON here..."
+            />
           </div>
 
           <div className="space-y-2">

@@ -14,6 +14,7 @@ export default function SignPage() {
   const [signature, setSignature] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [signedMessage, setSignedMessage] = useState<string>('');
 
   const handleConnect = async () => {
     if (!selectedNetwork) {
@@ -55,7 +56,7 @@ export default function SignPage() {
   const handleCopyToClipboard = () => {
     if (!signature || !address || !network) return;
 
-    const signedMessage: SignedMessage = {
+    const messageData: SignedMessage = {
       message,
       signature,
       address,
@@ -63,7 +64,7 @@ export default function SignPage() {
       timestamp: Date.now(),
     };
 
-    navigator.clipboard.writeText(JSON.stringify(signedMessage, null, 2));
+    setSignedMessage(JSON.stringify(messageData, null, 2));
   };
 
   return (
@@ -136,12 +137,27 @@ export default function SignPage() {
                   size="sm"
                   onClick={handleCopyToClipboard}
                 >
-                  Copy as JSON
+                  Generate JSON
                 </Button>
               </div>
               <div className="text-sm text-gray-900 font-mono break-all p-3 bg-gray-50 rounded-md border border-gray-200">
                 {signature}
               </div>
+            </div>
+          )}
+
+          {signedMessage && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-900">
+                Signed Message JSON
+              </label>
+              <textarea
+                value={signedMessage}
+                onChange={(e) => setSignedMessage(e.target.value)}
+                rows={8}
+                className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono"
+                placeholder="Signed message JSON will appear here..."
+              />
             </div>
           )}
 

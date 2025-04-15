@@ -22,38 +22,37 @@
 
 ### Message Handling
 - [x] Implement basic message signing
-- [ ] Implement message verification
-- [ ] Add JSON export/import for signed messages
-- [ ] Add copy/paste functionality for signed messages
+- [x] Implement message verification
+- [x] Add JSON export/import for signed messages
+- [x] Add copy/paste functionality for signed messages
 
 ## Phase 2: EVM Network Support
 ### EVM Wallet Integration
 - [x] Implement Web3.js integration
 - [x] Add MetaMask support
 - [ ] Add WalletConnect support
-- [ ] Support other EVM wallets
-- [ ] Test wallet connections
+- [x] Test wallet connections
 
 ### Message Signing for EVM
-- [ ] Implement EIP-712 signing
-- [ ] Add personal_sign support
-- [ ] Support different message formats
-- [ ] Add signing UI
-- [ ] Test signing functionality
+- [x] Implement EIP-712 signing
+- [x] Add personal_sign support
+- [x] Support different message formats
+- [x] Add signing UI
+- [x] Test signing functionality
 
 ### Message Verification for EVM
-- [ ] Implement verification logic
-- [ ] Add verification UI
-- [ ] Support different verification methods
-- [ ] Add verification results display
-- [ ] Test verification functionality
+- [x] Implement verification logic
+- [x] Add verification UI
+- [x] Support different verification methods
+- [x] Add verification results display
+- [x] Test verification functionality
 
 ### EVM Network Testing
-- [ ] Test with Ethereum mainnet
-- [ ] Test with test networks
-- [ ] Test with other EVM chains
-- [ ] Document network-specific features
-- [ ] Create network configuration
+- [x] Test with Ethereum mainnet
+- [x] Test with test networks
+- [x] Test with other EVM chains
+- [x] Document network-specific features
+- [x] Create network configuration
 
 ## Phase 3: Cosmos Network Support
 ### Cosmos Wallet Integration
@@ -150,10 +149,9 @@
 - [ ] Update documentation
 
 ## Current Focus
-- Phase 1: Core Infrastructure
-  - Implementing message verification
-  - Adding JSON export/import functionality
-  - Improving message sharing UX
+- Phase 2: EVM Network Support
+  - Adding WalletConnect support
+  - Testing WalletConnect integration
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -168,6 +166,12 @@
 - MetaMask integration
 - Message signing with Ethereum
 - Improved form styling and UX
+- JSON export/import functionality
+- Message verification UI
+- Copy/paste functionality for signed messages
+- Wallet connection testing
+- Message signing and verification testing
+- Network compatibility testing
 
 ## Blockers
 - None identified yet

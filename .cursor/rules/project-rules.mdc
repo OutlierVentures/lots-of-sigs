@@ -3,6 +3,10 @@ description:
 globs: 
 alwaysApply: true
 ---
+# Use pnpm
+
+Always use pnpm for package management and project commands.
+
 # Test when finished implementing
 
 Whenever you're done implementing something, run the tests. Verify that no tests are failing.
