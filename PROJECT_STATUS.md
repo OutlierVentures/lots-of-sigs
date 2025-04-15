@@ -14,16 +14,16 @@
 - [x] Create navigation structure
 
 ### Basic Wallet Connection
-- [ ] Research wallet connection methods
-- [ ] Design wallet connection interface
-- [ ] Implement basic connection flow
-- [ ] Add connection state management
-- [ ] Create wallet connection UI
+- [x] Research wallet connection methods
+- [x] Design wallet connection interface
+- [x] Implement basic connection flow
+- [x] Add connection state management
+- [x] Create wallet connection UI
 
 ## Phase 2: EVM Network Support
 ### EVM Wallet Integration
-- [ ] Implement Web3.js integration
-- [ ] Add MetaMask support
+- [x] Implement Web3.js integration
+- [x] Add MetaMask support
 - [ ] Add WalletConnect support
 - [ ] Support other EVM wallets
 - [ ] Test wallet connections
@@ -144,8 +144,9 @@
 - [ ] Update documentation
 
 ## Current Focus
-- Phase 1: Core Infrastructure
-  - Starting work on wallet connection functionality
+- Phase 2: EVM Network Support
+  - Adding WalletConnect support
+  - Testing wallet connections
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -156,6 +157,9 @@
 - Basic UI components (Button, Card)
 - Responsive design system
 - Navigation structure (Sign and Verify pages)
+- Basic wallet connection functionality
+- MetaMask integration
+- Message signing with Ethereum
 
 ## Blockers
 - None identified yet
