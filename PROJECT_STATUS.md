@@ -32,11 +32,12 @@
 - [x] Network-specific verification details
 - [x] Enhanced error messages and feedback
 - [x] Improved verification result display
-- [ ] Test WalletConnect end to end with a Safe{Wallet}
+- [x] Test WalletConnect end to end with a Safe{Wallet}
 
 ## Current Focus
 - Project completion and final review
   - Documentation updates
+  - Future consideration: EIP-1271 signature support for smart contract wallets
 
 ## Completed Items
 - Next.js project initialization with TypeScript

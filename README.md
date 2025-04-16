@@ -140,6 +140,10 @@ For signing structured data with type information:
 - Provides better user experience in wallets
 - Shows structured data in human-readable format
 
+#### Smart Contract Wallets
+
+Note: When using smart contract wallets (like Safe{Wallet}), the verification process will show a mismatch between the signing address and the recovered address. This is because smart contract wallets use EIP-1271 for signature validation, which is not yet implemented in this version. This feature is planned for a future release.
+
 #### Verification Process
 
 Ethereum signature verification:
