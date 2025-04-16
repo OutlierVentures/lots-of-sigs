@@ -1,15 +1,25 @@
 import React from 'react';
+import { cn } from '@/app/utils/cn';
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+// This type extends HTMLSelectElement attributes without adding new properties
+type SelectProps = React.SelectHTMLAttributes<HTMLSelectElement>;
 
-export function Select({ className, ...props }: SelectProps) {
-  return (
-    <select
-      className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 ${className || ''}`}
-      {...props}
-    />
-  );
-}
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <select
+        ref={ref}
+        className={cn(
+          'flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
+
+Select.displayName = 'Select';
 
 export function SelectContent({ children }: { children: React.ReactNode }) {
   return <div className="relative">{children}</div>;

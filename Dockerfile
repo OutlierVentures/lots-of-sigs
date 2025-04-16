@@ -10,8 +10,11 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
+# Install dependencies including dev dependencies
 RUN pnpm install --frozen-lockfile
+
+# Install additional required dependencies
+RUN pnpm add -D pino-pretty eslint-plugin-react-hooks @next/eslint-plugin-next
 
 # Copy source code
 COPY . .
@@ -33,7 +36,9 @@ COPY --from=builder /app/package.json .
 COPY --from=builder /app/pnpm-lock.yaml .
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
+
+# Install only production dependencies
+RUN pnpm install --prod --frozen-lockfile
 
 # Set environment variables
 ENV NODE_ENV=production

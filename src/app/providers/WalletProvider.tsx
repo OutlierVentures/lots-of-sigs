@@ -10,7 +10,7 @@ import { hash } from '../../lib/utils';
 import { SubstrateWallet } from '../../lib/substrate/client-wallet';
 import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
 import { CHAINS } from '../../lib/cosmos/chains';
-import { WalletConnectProvider } from '@walletconnect/ethereum-provider';
+import WalletConnectProvider from '@walletconnect/ethereum-provider';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -85,9 +85,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const handleChainChanged = (chainId: string) => {
+  const handleChainChanged = (chainId: string | number) => {
     console.log('WalletProvider: Chain changed', chainId);
-    setState(prev => ({ ...prev, chainId: Number(chainId) }));
+    setState(prev => ({ ...prev, chainId }));
   };
 
   const handleDisconnect = () => {
@@ -310,7 +310,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
         // Use Keplr's signAmino for ADR-36 signing
         const signResponse = await window.keplr.signAmino(
-          state.chainId || 'cosmoshub-4',
+          (state.chainId || 'cosmoshub-4').toString(),
           state.address,
           signDoc
         );

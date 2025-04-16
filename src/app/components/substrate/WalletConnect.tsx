@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SubstrateWallet } from '@/lib/substrate/wallet';
-import { SUBSTRATE_CHAINS } from '@/lib/substrate/chains';
+import { Button } from '../../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
+import { SubstrateWallet } from '../../../lib/substrate/wallet';
+import { SUBSTRATE_CHAINS } from '../../../lib/substrate/chains';
 
 export function WalletConnect() {
   const [isConnected, setIsConnected] = useState(false);
