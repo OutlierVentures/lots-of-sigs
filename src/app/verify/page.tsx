@@ -249,8 +249,23 @@ export default function VerifyPage() {
         }
       } else if (selectedNetwork === 'ethereum') {
         try {
+          console.log('Verifying EVM message:', {
+            message,
+            signature,
+            address,
+            messageLength: message.length,
+            signatureLength: signature.length
+          });
+          
           const recoveredAddress = await verifyMessage(message, signature);
+          console.log('Recovered address:', recoveredAddress);
+          
           const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
+          console.log('Verification result:', {
+            isValid,
+            recoveredAddress,
+            expectedAddress: address
+          });
           
           const checks = [
             {
@@ -282,10 +297,11 @@ export default function VerifyPage() {
             network: 'Ethereum'
           });
           
+          setVerificationResult(isValid);
           if (isValid) {
             setVerificationMessage('Message verification successful!');
           } else {
-            setVerificationMessage('Message verification failed');
+            setVerificationMessage('Message verification failed: Recovered address does not match the expected address');
           }
         } catch (e) {
           console.error('Verification error:', e);

@@ -27,11 +27,12 @@
 - [x] Update documentation with all supported networks
 - [x] Add examples for each network type
 
-## Phase 5: Finetuning (Completed)
+## Phase 5: Finetuning (In Progress)
 - [x] More detailed UX feedback for verification (e.g. what was verified, what did / didn't pass)
 - [x] Network-specific verification details
 - [x] Enhanced error messages and feedback
 - [x] Improved verification result display
+- [ ] Test WalletConnect end to end with a Safe{Wallet}
 
 ## Current Focus
 - Project completion and final review
