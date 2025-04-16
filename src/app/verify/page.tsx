@@ -61,9 +61,10 @@ export default function VerifyPage() {
   };
 
   const handleVerify = async () => {
-    setError('');
-    setVerificationResult(null);
     setIsLoading(true);
+    setError(null);
+    setVerificationResult(null);
+    setVerificationMessage('');
 
     try {
       let parsedJson;
@@ -81,20 +82,21 @@ export default function VerifyPage() {
 
       if (selectedNetwork === 'cosmos') {
         try {
-          // Parse the signature JSON
-          const sigJson = JSON.parse(signature);
-          console.log('Parsed signature JSON:', JSON.stringify(sigJson, null, 2));
+          // Handle both string and object signatures
+          let signatureData;
+          if (typeof signature === 'string') {
+            // If it's a string, parse it
+            signatureData = JSON.parse(signature);
+          } else {
+            // If it's already an object, use it directly
+            signatureData = signature;
+          }
           
-          if (!sigJson.signature || !sigJson.pub_key || !sigJson.sign_doc) {
+          console.log('Signature data:', JSON.stringify(signatureData, null, 2));
+          
+          if (!signatureData.signature || !signatureData.pub_key || !signatureData.sign_doc) {
             throw new Error('Invalid signature format: missing required fields');
           }
-
-          // Use the original sign document from the signature
-          const signatureData = {
-            signature: sigJson.signature,
-            pub_key: sigJson.pub_key,
-            sign_doc: sigJson.sign_doc,
-          };
 
           console.log('Verification input:', JSON.stringify(signatureData, null, 2));
           

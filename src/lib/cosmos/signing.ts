@@ -36,24 +36,27 @@ export interface SignatureData {
  * @returns The sign document
  */
 export function createSignDoc(message: string, signer: string): SignDoc {
+  // Base64 encode the message as required by ADR-36
+  const base64Data = Buffer.from(message).toString('base64');
+  
   return {
-    chain_id: '',
-    account_number: '0',
-    sequence: '0',
+    chain_id: "",
+    account_number: "0",
+    sequence: "0",
     fee: {
-      gas: '0',
+      gas: "0",
       amount: [],
     },
     msgs: [
       {
-        type: 'sign/MsgSignData',
+        type: "sign/MsgSignData",
         value: {
           signer,
-          data: message,
+          data: base64Data,
         },
       },
     ],
-    memo: '',
+    memo: "",
   };
 }
 
@@ -113,41 +116,105 @@ export async function verifySignature(
 
     // Parse the signature and public key
     const sigBytes = fromBase64(signatureData.signature);
-    const pubKeyBytes = fromBase64(signatureData.pub_key.value);
+    const compressedPubKeyBytes = fromBase64(signatureData.pub_key.value);
     console.log('Parsed bytes:', {
       sigBytesLength: sigBytes.length,
-      pubKeyBytesLength: pubKeyBytes.length,
+      pubKeyBytesLength: compressedPubKeyBytes.length,
+      pubKeyFirstByte: compressedPubKeyBytes[0].toString(16),
     });
 
-    // Create the message hash
-    const signDocString = JSON.stringify(signatureData.sign_doc);
+    // Convert compressed public key to uncompressed if needed
+    let pubKeyBytes;
+    if (compressedPubKeyBytes.length === 33) {
+      console.log('Detected compressed public key, attempting to uncompress...');
+      try {
+        pubKeyBytes = await Secp256k1.uncompressPubkey(compressedPubKeyBytes);
+        console.log('Successfully uncompressed public key:', {
+          compressed: Buffer.from(compressedPubKeyBytes).toString('hex'),
+          uncompressed: Buffer.from(pubKeyBytes).toString('hex'),
+          lengths: {
+            compressed: compressedPubKeyBytes.length,
+            uncompressed: pubKeyBytes.length
+          },
+          firstBytes: {
+            compressed: compressedPubKeyBytes[0].toString(16),
+            uncompressed: pubKeyBytes[0].toString(16)
+          }
+        });
+      } catch (error) {
+        console.error('Failed to uncompress public key:', error);
+        return false;
+      }
+    } else if (compressedPubKeyBytes.length === 65) {
+      console.log('Using uncompressed public key directly');
+      pubKeyBytes = compressedPubKeyBytes;
+    } else {
+      console.error('Invalid public key length:', compressedPubKeyBytes.length);
+      return false;
+    }
+
+    console.log('Public key bytes:', {
+      compressed: Buffer.from(compressedPubKeyBytes).toString('hex'),
+      uncompressed: Buffer.from(pubKeyBytes).toString('hex'),
+      lengths: {
+        compressed: compressedPubKeyBytes.length,
+        uncompressed: pubKeyBytes.length
+      }
+    });
+
+    // Create the message hash using the sorted sign document format
+    const sortedSignDoc = {
+      account_number: signatureData.sign_doc.account_number,
+      chain_id: signatureData.sign_doc.chain_id,
+      fee: {
+        amount: signatureData.sign_doc.fee.amount,
+        gas: signatureData.sign_doc.fee.gas
+      },
+      memo: signatureData.sign_doc.memo,
+      msgs: signatureData.sign_doc.msgs.map(msg => ({
+        type: msg.type,
+        value: {
+          data: msg.value.data,
+          signer: msg.value.signer
+        }
+      })),
+      sequence: signatureData.sign_doc.sequence
+    };
+    const signDocString = JSON.stringify(sortedSignDoc, null, 0);
     console.log('Sign doc string:', signDocString);
+    console.log('Sign doc string bytes:', Buffer.from(signDocString).toString('hex'));
+    
     const messageHash = sha256(new TextEncoder().encode(signDocString));
     console.log('Message hash:', Buffer.from(messageHash).toString('hex'));
 
-    // Create the signature object with recovery value
-    // The recovery value is the last byte of the signature
-    const recoveryValue = sigBytes[64] || 0;
+    // Create the signature object
     const sig = new ExtendedSecp256k1Signature(
       sigBytes.slice(0, 32),
       sigBytes.slice(32, 64),
-      recoveryValue
+      0  // Recovery value is not used in this case
     );
     console.log('Signature object:', {
       r: Buffer.from(sig.r(32)).toString('hex'),
       s: Buffer.from(sig.s(32)).toString('hex'),
-      recovery: recoveryValue,
+      recovery: 0,
     });
 
     // Verify the signature
+    console.log('Verifying signature with:', {
+      messageHash: Buffer.from(messageHash).toString('hex'),
+      pubKeyBytes: Buffer.from(pubKeyBytes).toString('hex'),
+      sigBytes: Buffer.from(sigBytes).toString('hex'),
+    });
     const isValid = await Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
     console.log('Signature verification result:', isValid);
+
     if (!isValid) {
       return false;
     }
 
-    // Verify the address matches
-    const pubKeyHash = ripemd160(sha256(pubKeyBytes));
+    // For address verification, use the original compressed public key
+    // as Cosmos addresses are always derived from compressed keys
+    const pubKeyHash = ripemd160(sha256(compressedPubKeyBytes));
     const derivedAddress = toBech32('cosmos', pubKeyHash);
     console.log('Address verification:', {
       derivedAddress,

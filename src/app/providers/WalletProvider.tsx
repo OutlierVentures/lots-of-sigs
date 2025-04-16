@@ -262,7 +262,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         );
         console.log('Keplr sign response:', JSON.stringify(signResponse, null, 2));
 
-        // Return the complete signature data in the format our verification expects
+        // Create the signature data in the format our verification expects
         const signatureData = {
           signature: signResponse.signature.signature,
           pub_key: signResponse.signature.pub_key,
@@ -270,7 +270,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         };
         console.log('Final signature data:', JSON.stringify(signatureData, null, 2));
 
-        return JSON.stringify(signatureData);
+        // Create the frontend-compatible JSON structure
+        const frontendJson = {
+          message,
+          signature: JSON.stringify(signatureData),  // Stringify the signature data
+          address: state.address,
+          network: 'cosmos',
+          timestamp: new Date().toISOString(),
+        };
+
+        // Log the final JSON structure for debugging
+        console.log('Final frontend JSON:', JSON.stringify(frontendJson, null, 2));
+
+        return JSON.stringify(frontendJson);
       } else if (state.network === 'ethereum' && signer) {
         console.log('WalletProvider: Using Ethereum signer to sign message');
         // For EVM chains, use the standard signMessage

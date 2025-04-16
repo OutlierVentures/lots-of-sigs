@@ -49,10 +49,13 @@ export default function SignPage() {
       const sig = await actions.signMessage(message);
       setSignature(sig);
       
+      // Parse the signature to get the actual signature data
+      const parsedSig = JSON.parse(sig);
+      
       // Generate JSON representation
       const signedMessageObj: SignedMessage = {
         message,
-        signature: sig,
+        signature: parsedSig.signature,  // Use the signature object directly
         address: address!,
         network: network!,
         timestamp: new Date().toISOString(),
