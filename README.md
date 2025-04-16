@@ -64,6 +64,10 @@ pnpm install
 3. Create a `.env.local` file in the root directory and add your WalletConnect project ID:
 ```
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+
+# Development server configuration (optional)
+NEXT_PUBLIC_DEV_HOST=0.0.0.0  # Set to 0.0.0.0 to allow external access
+NEXT_PUBLIC_DEV_PORT=3000     # Change the port if needed
 ```
 
 4. Start the development server:
@@ -72,6 +76,12 @@ pnpm dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+   To access the app from other devices on your local network:
+   - Find your computer's local IP address (e.g., using `ipconfig` on Windows or `ifconfig` on Linux/Mac)
+   - Access the app using `http://<your-local-ip>:3000` from other devices on the same network
+
+   Note: If you changed the port in `.env.local`, replace 3000 with your chosen port number.
 
 ## Usage
 
