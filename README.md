@@ -83,6 +83,53 @@ pnpm dev
 
    Note: If you changed the port in `.env.local`, replace 3000 with your chosen port number.
 
+## Docker Deployment
+
+The application can be deployed using Docker for production environments.
+
+### Prerequisites
+
+- Docker installed on your system
+- Docker Compose (optional, for easier deployment)
+
+### Building the Docker Image
+
+1. Build the Docker image:
+```bash
+docker build -t lots-of-sigs .
+```
+
+### Running the Container
+
+1. Run the container with default port (3000):
+```bash
+docker run -p 3000:3000 lots-of-sigs
+```
+
+2. Run the container with a custom port:
+```bash
+docker run -p 8080:3000 -e PORT=3000 lots-of-sigs
+```
+
+The application will be available at:
+- Default: http://localhost:3000
+- Custom port: http://localhost:8080 (or your chosen port)
+
+### Environment Variables
+
+You can configure the application using environment variables:
+
+- `PORT`: The port number the application will listen on (default: 3000)
+- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: Your WalletConnect project ID
+
+Example with environment variables:
+```bash
+docker run -p 3000:3000 \
+  -e PORT=3000 \
+  -e NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id \
+  lots-of-sigs
+```
+
 ## Usage
 
 ### Signing Messages
