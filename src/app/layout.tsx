@@ -1,12 +1,18 @@
-'use client';
-
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { BaseLayout } from "./components/layout/BaseLayout";
-import { ClientWalletProvider } from "./providers/ClientWalletProvider";
-import { Suspense } from 'react';
+import { ClientProviders } from "./providers/ClientProviders";
+import { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: {
+    default: "Lots Of Sigs",
+    template: "%s | Lots Of Sigs"
+  },
+  description: "Sign and verify messages using blockchain wallets",
+};
 
 export default function RootLayout({
   children,
@@ -16,11 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <ClientWalletProvider>
-            <BaseLayout>{children}</BaseLayout>
-          </ClientWalletProvider>
-        </Suspense>
+        <ClientProviders>
+          <BaseLayout>{children}</BaseLayout>
+        </ClientProviders>
       </body>
     </html>
   );

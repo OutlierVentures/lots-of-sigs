@@ -12,7 +12,7 @@ export const walletConnectConfig = {
   methods: ['eth_sendTransaction', 'eth_sign', 'personal_sign', 'eth_signTypedData'],
   events: ['chainChanged', 'accountsChanged'],
   metadata: {
-    name: 'Blockchain Message Signer',
+    name: 'Lots Of Sigs',
     description: 'Sign and verify messages using blockchain wallets',
     url: 'https://your-app-url.com',
     icons: ['https://your-app-url.com/icon.png'],

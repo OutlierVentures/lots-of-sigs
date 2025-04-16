@@ -1,13 +1,18 @@
 import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader } from './components/ui/Card';
 import { Button } from './components/ui/Button';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Home'
+};
 
 export default function Home() {
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-          Blockchain Message Signer
+          Lots Of Sigs
         </h1>
         <p className="mt-6 text-lg leading-8 text-gray-600">
           Sign and verify messages using your blockchain wallet. Support for multiple networks and wallets.

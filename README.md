@@ -1,4 +1,4 @@
-# Blockchain Message Signer
+# Lots of Sigs
 
 A privacy-first web application for cryptographically signing and verifying messages using blockchain addresses. The tool operates entirely locally, ensuring no data is published or stored externally.
 

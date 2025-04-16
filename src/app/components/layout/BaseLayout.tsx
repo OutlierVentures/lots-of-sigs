@@ -16,7 +16,7 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({ children }) => {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/" className="text-xl font-bold text-gray-900">
-                  Blockchain Message Signer
+                  Lots Of Sigs
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -44,13 +44,6 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({ children }) => {
         </div>
       </main>
 
-      <footer className="bg-white">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} Blockchain Message Signer. All rights reserved.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }; 
