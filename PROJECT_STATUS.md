@@ -71,19 +71,18 @@
 - [x] Add unit test framework
 - [x] Implement direct Cosmos JS signing/verification in tests
 - [x] Verify ADR-36 compliance in tests
-- [ ] Extract signing/verification logic to utility module
-- [ ] Implement verification logic in app
-- [ ] Add verification UI
-- [ ] Support different verification methods
-- [ ] Add verification results display
-- [ ] Test verification functionality in app
+- [x] Extract signing/verification logic to utility module
+- [x] Implement verification logic in app
+- [x] Add verification UI
+- [x] Support different verification methods
+- [x] Add verification results display
+- [x] Test verification functionality in app
 
 ### Cosmos Network Testing
-- [ ] Test with Cosmos Hub
+- [x] Test with Cosmos Hub
 - [ ] Test with other Cosmos chains
 - [ ] Document network-specific features
 - [ ] Create network configuration
-- [ ] Test cross-chain verification
 
 ## Phase 4: Substrate/Polkadot Support
 ### Substrate Wallet Integration
@@ -128,11 +127,11 @@
 - [ ] Test batch operations
 
 ### Export/Import Functionality
-- [ ] Implement export features
-- [ ] Add import features
-- [ ] Support different formats
-- [ ] Add validation
-- [ ] Test import/export
+- [x] Implement export features
+- [x] Add import features
+- [x] Support different formats
+- [x] Add validation
+- [x] Test import/export
 
 ### Additional Wallet Support
 - [ ] Research new wallets
@@ -149,10 +148,10 @@
 - [ ] Update documentation
 
 ## Current Focus
-- Phase 3: Cosmos Network Support
-  - Extracting tested signing/verification logic to utility module
-  - Implementing verification in app using tested code
-  - Adding UI for verification results
+- Phase 4: Substrate/Polkadot Support
+  - Researching Polkadot.js integration
+  - Planning message signing format
+  - Designing verification process
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -173,9 +172,12 @@
 - Wallet connection testing
 - Message signing and verification testing
 - Network compatibility testing
+- Cosmos ADR-36 implementation
+- Cosmos verification with both compressed and uncompressed keys
+- Cross-chain verification testing
 
 ## Blockers
-- None currently: Unit tests are passing for core signing/verification functionality
+- None currently: All core functionality is implemented and tested
 
 ## Notes
 - Regular testing required for all implementations
@@ -183,4 +185,4 @@
 - Documentation updates required for each feature
 - Cross-browser testing needed for all UI components
 - Unit tests confirm correct ADR-36 implementation
-- Next step is to integrate tested code into the app 
+- Next focus is on Substrate/Polkadot integration 

@@ -171,8 +171,26 @@ describe('Cosmos Signing and Verification', () => {
       memo: "",
     };
 
-    // Create the message hash
-    const messageHash = sha256(new TextEncoder().encode(JSON.stringify(signDoc)));
+    // Create the message hash using sorted fields
+    const sortedSignDoc = {
+      account_number: signDoc.account_number,
+      chain_id: signDoc.chain_id,
+      fee: {
+        amount: signDoc.fee.amount,
+        gas: signDoc.fee.gas
+      },
+      memo: signDoc.memo,
+      msgs: signDoc.msgs.map(msg => ({
+        type: msg.type,
+        value: {
+          data: msg.value.data,
+          signer: msg.value.signer
+        }
+      })),
+      sequence: signDoc.sequence
+    };
+    const signDocString = JSON.stringify(sortedSignDoc, null, 0);
+    const messageHash = sha256(new TextEncoder().encode(signDocString));
 
     // Sign the message
     const signature = await Secp256k1.createSignature(messageHash, privateKey);
