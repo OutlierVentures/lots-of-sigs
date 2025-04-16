@@ -133,6 +133,7 @@ export default function VerifyPage() {
                 signature: typeof signature === 'string' ? signature : JSON.stringify(signature),
                 address,
                 network: 'polkadot',
+                chain: 'polkadot',
                 timestamp: new Date().toISOString()
               };
             }

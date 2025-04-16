@@ -26,16 +26,6 @@
 - [x] Add comprehensive test coverage
 - [x] Update documentation with all supported networks
 - [x] Add examples for each network type
-- [ ] Add CI/CD pipeline
-- [ ] Add automated testing
-
-## Phase 5: Advanced Features (Planned)
-- [ ] Add support for EIP-712 structured data signing
-- [ ] Implement message encryption
-- [ ] Add support for more wallet types
-- [ ] Add support for more networks
-- [ ] Implement message templates
-- [ ] Add support for batch signing
 
 ## Current Focus
 - Phase 4: Testing and Documentation

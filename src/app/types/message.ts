@@ -5,5 +5,6 @@ export interface SignedMessage {
   signature: string | SignatureData;
   address: string;
   network: string;
+  chain?: string;
   timestamp: string;
 } 
