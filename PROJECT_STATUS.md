@@ -22,16 +22,20 @@
 - [x] Update UI to handle Polkadot-specific features
 - [x] Handle SSR issues with Polkadot extension
 
-## Phase 4: Testing and Documentation (In Progress)
+## Phase 4: Testing and Documentation (Completed)
 - [x] Add comprehensive test coverage
 - [x] Update documentation with all supported networks
 - [x] Add examples for each network type
 
+## Phase 5: Finetuning (Completed)
+- [x] More detailed UX feedback for verification (e.g. what was verified, what did / didn't pass)
+- [x] Network-specific verification details
+- [x] Enhanced error messages and feedback
+- [x] Improved verification result display
+
 ## Current Focus
-- Phase 4: Testing and Documentation
-  - Adding comprehensive test coverage
-  - Updating documentation with all supported networks
-  - Adding examples for each network type
+- Project completion and final review
+  - Documentation updates
 
 ## Completed Items
 - Next.js project initialization with TypeScript
@@ -58,6 +62,10 @@
 - Support for multiple Cosmos chains (Cosmos Hub, Fetch, Agoric)
 - Auto-selection of chain based on address prefix
 - Improved verification UI with both JSON paste and manual input options
+- Enhanced verification feedback with detailed checks
+- Network-specific verification details for each blockchain
+- Improved error handling and user feedback
+- Comprehensive verification result display
 
 ## Blockers
 - None currently: All core functionality is implemented and tested
@@ -68,4 +76,4 @@
 - Documentation updates required for each feature
 - Cross-browser testing needed for all UI components
 - Unit tests confirm correct ADR-36 implementation
-- Next focus is on testing and documentation 
+- Project is feature complete, focusing on final polish and documentation 

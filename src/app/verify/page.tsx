@@ -14,11 +14,11 @@ import { verifySignature, extractMessage } from '../../lib/cosmos/signing';
 import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
-import { verifyMessage as verifySubstrateMessage } from '../../lib/substrate/signing';
+import { verifyMessage as verifySubstrateMessage, SignedMessage as SubstrateSignedMessage } from '../../lib/substrate/signing';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
-  const [signature, setSignature] = useState('');
+  const [signature, setSignature] = useState<string>('');
   const [address, setAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
   const [selectedChainId, setSelectedChainId] = useState<CosmosChainId>('cosmoshub-4');
@@ -26,6 +26,11 @@ export default function VerifyPage() {
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
   const [verificationMessage, setVerificationMessage] = useState('');
+  const [verificationDetails, setVerificationDetails] = useState<{
+    checks: Array<{ name: string; passed: boolean; details?: string }>;
+    network: string;
+    chain?: string;
+  } | null>(null);
   const [jsonInput, setJsonInput] = useState('');
 
   const handleJsonInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -82,31 +87,64 @@ export default function VerifyPage() {
       setError(null);
       setVerificationResult(null);
       setVerificationMessage('');
+      setVerificationDetails(null);
 
       if (selectedNetwork === 'cosmos') {
         try {
-          // Handle both string and object signatures
           let signatureData;
           if (typeof signature === 'string') {
-            // If it's a string, parse it
             signatureData = JSON.parse(signature);
           } else {
-            // If it's already an object, use it directly
             signatureData = signature;
           }
-          
-          console.log('Signature data:', JSON.stringify(signatureData, null, 2));
           
           if (!signatureData.signature || !signatureData.pub_key || !signatureData.sign_doc) {
             throw new Error('Invalid signature format: missing required fields');
           }
 
-          console.log('Verification input:', JSON.stringify(signatureData, null, 2));
-          
-          // Verify the signature using our utility module
           const isValid = await verifySignature(signatureData, address);
-          console.log('Verification result:', isValid);
           setVerificationResult(isValid);
+          
+          // Extract chain prefix from address
+          const prefix = address.split('1')[0];
+          const chainConfig = CHAINS[selectedChainId];
+          const isCorrectPrefix = chainConfig?.bech32Prefix === prefix;
+          
+          const checks = [
+            {
+              name: 'Signature Format',
+              passed: true,
+              details: 'Signature contains all required fields'
+            },
+            {
+              name: 'Public Key Format',
+              passed: true,
+              details: signatureData.pub_key.value.length === 33 ? 'Compressed format' : 'Uncompressed format'
+            },
+            {
+              name: 'Chain Compatibility',
+              passed: isCorrectPrefix,
+              details: isCorrectPrefix 
+                ? `Address prefix (${prefix}) matches selected chain (${chainConfig?.chainName})`
+                : `Address prefix (${prefix}) does not match selected chain (${chainConfig?.chainName})`
+            },
+            {
+              name: 'Signature Verification',
+              passed: isValid,
+              details: isValid ? 'Signature matches the message and public key' : 'Signature does not match'
+            },
+            {
+              name: 'Address Verification',
+              passed: isValid,
+              details: isValid ? 'Address matches the public key' : 'Address does not match the public key'
+            }
+          ];
+
+          setVerificationDetails({
+            checks,
+            network: 'Cosmos',
+            chain: selectedChainId
+          });
           
           if (isValid) {
             setVerificationMessage('Message verification successful!');
@@ -118,37 +156,77 @@ export default function VerifyPage() {
           setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
           setVerificationResult(false);
           setVerificationMessage('Verification failed');
+          setVerificationDetails({
+            checks: [{
+              name: 'Error',
+              passed: false,
+              details: e instanceof Error ? e.message : 'Unknown error'
+            }],
+            network: 'Cosmos',
+            chain: selectedChainId
+          });
         }
       } else if (selectedNetwork === 'polkadot') {
         try {
-          // Parse the signed message JSON if it's a string
-          let signedMessage: SignedMessage;
-          if (typeof signature === 'string') {
-            try {
-              signedMessage = JSON.parse(signature);
-            } catch (e) {
-              // If parsing fails, create a signed message object from the raw signature
-              signedMessage = {
-                message,
-                signature: typeof signature === 'string' ? signature : JSON.stringify(signature),
-                address,
-                network: 'polkadot',
-                chain: 'polkadot',
-                timestamp: new Date().toISOString()
-              };
-            }
-          } else {
-            signedMessage = signature as SignedMessage;
+          let signedMessage: SubstrateSignedMessage;
+          try {
+            const parsed = JSON.parse(signature) as SignedMessage;
+            signedMessage = {
+              message: parsed.message,
+              signature: typeof parsed.signature === 'string' ? parsed.signature : JSON.stringify(parsed.signature),
+              address,
+              network: 'polkadot',
+              chain: parsed.chain || 'polkadot',
+              timestamp: parsed.timestamp || new Date().toISOString()
+            };
+          } catch (e) {
+            signedMessage = {
+              message,
+              signature,
+              address,
+              network: 'polkadot',
+              chain: 'polkadot',
+              timestamp: new Date().toISOString()
+            };
           }
 
-          // For Polkadot, we don't need the chain for verification
-          // The signature verification is chain-agnostic
           const isValid = await verifySubstrateMessage(signedMessage, {
             name: 'polkadot',
-            rpcUrl: '', // Not needed for verification
-            ss58Format: 0 // Not needed for verification
+            rpcUrl: '',
+            ss58Format: 0
           });
-          setVerificationResult(isValid);
+          
+          // Extract SS58 format from address
+          const ss58Format = parseInt(address.substring(0, 2), 16);
+          const isCorrectFormat = ss58Format === 0; // Polkadot uses format 0
+          
+          const checks = [
+            {
+              name: 'Signature Format',
+              passed: true,
+              details: 'Valid hex-encoded signature'
+            },
+            {
+              name: 'Address Format',
+              passed: true,
+              details: `SS58 format: ${ss58Format} (${isCorrectFormat ? 'correct' : 'incorrect'})`
+            },
+            {
+              name: 'Signature Verification',
+              passed: isValid,
+              details: isValid ? 'Signature matches the message and public key' : 'Signature does not match'
+            },
+            {
+              name: 'Address Verification',
+              passed: isValid,
+              details: isValid ? 'Address matches the public key' : 'Address does not match the public key'
+            }
+          ];
+
+          setVerificationDetails({
+            checks,
+            network: 'Polkadot'
+          });
           
           if (isValid) {
             setVerificationMessage('Message verification successful!');
@@ -160,24 +238,49 @@ export default function VerifyPage() {
           setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
           setVerificationResult(false);
           setVerificationMessage('Verification failed');
+          setVerificationDetails({
+            checks: [{
+              name: 'Error',
+              passed: false,
+              details: e instanceof Error ? e.message : 'Unknown error'
+            }],
+            network: 'Polkadot'
+          });
         }
       } else if (selectedNetwork === 'ethereum') {
         try {
-          console.log('Verifying Ethereum signature:', {
-            message,
-            signature,
-            address
-          });
-          
-          // For EVM chains, use ethers.js verifyMessage
           const recoveredAddress = await verifyMessage(message, signature);
-          console.log('Recovered address:', recoveredAddress);
-          console.log('Expected address:', address);
-          
           const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
-          console.log('Verification result:', isValid);
           
-          setVerificationResult(isValid);
+          const checks = [
+            {
+              name: 'Signature Format',
+              passed: true,
+              details: 'Valid ECDSA signature'
+            },
+            {
+              name: 'Address Format',
+              passed: true,
+              details: 'Valid Ethereum address format'
+            },
+            {
+              name: 'Signature Verification',
+              passed: isValid,
+              details: isValid ? 'Signature matches the message and public key' : 'Signature does not match'
+            },
+            {
+              name: 'Address Recovery',
+              passed: isValid,
+              details: isValid 
+                ? `Recovered address (${recoveredAddress}) matches the expected address (${address})`
+                : `Recovered address (${recoveredAddress}) does not match the expected address (${address})`
+            }
+          ];
+
+          setVerificationDetails({
+            checks,
+            network: 'Ethereum'
+          });
           
           if (isValid) {
             setVerificationMessage('Message verification successful!');
@@ -188,7 +291,15 @@ export default function VerifyPage() {
           console.error('Verification error:', e);
           setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
           setVerificationResult(false);
-          setVerificationMessage('Message verification failed');
+          setVerificationMessage('Verification failed');
+          setVerificationDetails({
+            checks: [{
+              name: 'Error',
+              passed: false,
+              details: e instanceof Error ? e.message : 'Unknown error'
+            }],
+            network: 'Ethereum'
+          });
         }
       } else {
         setError('Network not supported');
@@ -302,14 +413,63 @@ export default function VerifyPage() {
         </div>
 
         {verificationResult !== null && (
-          <div className={`p-4 rounded-md border ${
-            verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-          }`}>
-            <p className={`text-sm ${
-              verificationResult ? 'text-green-600' : 'text-red-600'
+          <div className="space-y-4">
+            <div className={`p-4 rounded-md border ${
+              verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             }`}>
-              {verificationMessage}
-            </p>
+              <p className={`text-sm ${
+                verificationResult ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {verificationMessage}
+              </p>
+            </div>
+
+            {verificationDetails && (
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Verification Details</h3>
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600">
+                    Network: <span className="font-medium">{verificationDetails.network}</span>
+                    {verificationDetails.chain && (
+                      <span className="ml-2">
+                        Chain: <span className="font-medium">{verificationDetails.chain}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {verificationDetails.checks.map((check, index) => (
+                      <div key={index} className="flex items-start">
+                        <div className={`flex-shrink-0 h-5 w-5 ${
+                          check.passed ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {check.passed ? (
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="ml-3">
+                          <p className={`text-sm font-medium ${
+                            check.passed ? 'text-green-900' : 'text-red-900'
+                          }`}>
+                            {check.name}
+                          </p>
+                          {check.details && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {check.details}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

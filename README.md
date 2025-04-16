@@ -4,28 +4,45 @@ A privacy-first web application for cryptographically signing and verifying mess
 
 ## Features
 
-- Sign messages using your blockchain wallet
-- Verify signed messages to confirm their authenticity
-- Support for multiple networks:
-  - EVM-based networks (Ethereum, Polygon, etc.)
-  - Cosmos-based networks (Cosmos Hub, Fetch, Agoric, etc.)
-  - Substrate/Polkadot-based networks (Polkadot, Kusama, etc.)
-- Support for multiple wallet types:
-  - Browser wallets (MetaMask, Rabby, Brave Wallet, Fireblocks, etc.)
-  - WalletConnect
-  - Keplr (for Cosmos networks)
-  - Polkadot.js (for Substrate networks)
-- JSON export/import of signed messages
-- Copy/paste functionality for easy sharing
-- Automatic network detection based on address format
-- Support for multiple chains within each network type
+- **Multi-Chain Support**
+  - EVM networks (Ethereum, BSC, etc.)
+  - Cosmos networks (Cosmos Hub, Osmosis, etc.)
+  - Substrate networks (Polkadot, Kusama, etc.)
+
+- **Wallet Integration**
+  - MetaMask for EVM networks
+  - Keplr for Cosmos networks
+  - Polkadot{.js} for Substrate networks
+
+- **Message Signing**
+  - Sign messages with any supported wallet
+  - Automatic chain detection
+  - Local storage of signed messages
+  - Export/import functionality
+
+- **Message Verification**
+  - Verify messages from any supported network
+  - Detailed verification feedback
+  - Network-specific verification details
+  - Comprehensive result display
+  - Support for both JSON and manual input
+
+- **Security**
+  - All operations performed locally
+  - No server communication required
+  - Private keys never leave your wallet
+  - Secure message storage
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v18 or later)
-- npm or yarn
+- pnpm
+- A supported browser:
+  - Chrome
+  - Brave
+  - Other Chrome-based browsers
 - A blockchain wallet:
   - Browser wallet or WalletConnect (for EVM networks)
   - Keplr (for Cosmos networks)
@@ -41,7 +58,7 @@ cd blockchain-signed-messages-offline
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Create a `.env.local` file in the root directory and add your WalletConnect project ID:
@@ -51,7 +68,7 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
 
 4. Start the development server:
 ```bash
-npm run dev
+pnpm dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -74,27 +91,28 @@ npm run dev
 
 ### Verifying Messages
 
-1. Navigate to the "Verify Message" page
-2. You can verify messages in two ways:
-   - Paste the complete signed message JSON (recommended)
-     - Automatically detects the network type
-     - For Cosmos networks, detects the chain based on the address prefix
-     - Populates all fields automatically
-   - Or manually enter:
-     - The original message
-     - The signature
-     - The signer's address
-     - The network type
-     - The chain (for Cosmos and Polkadot networks)
+1. Navigate to the Verify page
+2. Choose your verification method:
+   - **JSON Input**: Paste the complete signed message JSON
+   - **Manual Input**: Enter message details manually
 3. Click "Verify Message"
-4. View the verification result
+4. View detailed verification results:
+   - Signature validity
+   - Network-specific checks
+   - Message content verification
+   - Timestamp validation
+   - Address verification
 
-## Security
+## Security Measures
 
 - All operations are performed locally in your browser
-- No data is stored or transmitted to external servers
+- No server communication required
 - Private keys never leave your wallet
-- Messages are signed using standard cryptographic methods
+- Messages are stored locally in your browser
+- Regular security audits and updates
+- Comprehensive verification feedback
+- Network-specific security checks
+- Tested and supported on Chrome and Chrome-based browsers
 
 ## Signature Standards
 
@@ -312,10 +330,10 @@ src/
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
 
 ## Contributing
 

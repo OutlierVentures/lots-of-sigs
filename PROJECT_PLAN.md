@@ -59,37 +59,33 @@ A privacy-first web application for cryptographically signing and verifying mess
 ## Development Phases
 
 ### Phase 1: Core Infrastructure (Completed)
-- Project setup
-- Basic UI framework
-- Local storage implementation
-- Basic wallet connection
+- Basic message signing and verification
+- EVM network support
+- Essential wallet integration
 
-### Phase 2: EVM Network Support (Completed)
-- EVM wallet integration
-- Message signing for EVM addresses
-- Message verification for EVM addresses
-- Testing with multiple EVM networks
+### Phase 2: Cosmos Network Support (Completed)
+- Keplr wallet integration
+- ADR-36 message signing
+- Multi-chain support
 
-### Phase 3: Cosmos Network Support (Completed)
-- Cosmos wallet integration
-- Message signing for Cosmos addresses
-- Message verification for Cosmos addresses
-- Testing with multiple Cosmos networks
-- Cross-chain verification support
+### Phase 3: Substrate/Polkadot Support (Completed)
+- Polkadot{.js} wallet integration
+- Substrate message signing
+- Multi-chain support
 
-### Phase 4: Substrate/Polkadot Support (Current)
-- Substrate wallet integration
-- Message signing for Substrate addresses
-- Message verification for Substrate addresses
-- Testing with multiple Substrate networks
-- Cross-chain verification support
+### Phase 4: Testing and Documentation (Completed)
+- Comprehensive testing
+- Documentation updates
+- Cross-browser compatibility
 
-### Phase 5: Enhanced Features (Planned)
-- Advanced message formatting
-- Batch operations
-- Additional wallet support
-- UI/UX improvements
-- Performance optimizations
+### Phase 5: Finetuning (Completed)
+- Enhanced user experience
+- Improved verification feedback
+- Security enhancements
+
+## Current Focus
+- Final project review
+- Documentation finalization
 
 ## Success Criteria
 - Support for all target blockchain networks
