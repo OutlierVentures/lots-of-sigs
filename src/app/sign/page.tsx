@@ -6,12 +6,13 @@ import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { SignedMessage } from '../types/message';
 import { Button } from '../components/ui/Button';
 import { CHAINS } from '../../lib/cosmos/chains';
+import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
 
 export default function SignPage() {
   const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
   const [message, setMessage] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
-  const [selectedChainId, setSelectedChainId] = useState<CosmosChainId>('cosmoshub-4');
+  const [selectedChainId, setSelectedChainId] = useState<string>('cosmoshub-4');
   const [signature, setSignature] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,13 +52,18 @@ export default function SignPage() {
       const sig = await actions.signMessage(message);
       setSignature(sig);
       
-      // Parse the signature to get the actual signature data
-      const parsedSig = JSON.parse(sig);
+      // Try to parse the signature as JSON, if it fails, use it as a raw signature
+      let parsedSig;
+      try {
+        parsedSig = JSON.parse(sig);
+      } catch (e) {
+        parsedSig = { signature: sig };
+      }
       
       // Generate JSON representation
       const signedMessageObj: SignedMessage = {
         message,
-        signature: parsedSig.signature,  // Use the signature object directly
+        signature: parsedSig.signature,
         address: address!,
         network: network!,
         timestamp: new Date().toISOString(),
@@ -99,12 +105,14 @@ export default function SignPage() {
       case 'ethereum':
         return (
           <>
-            <option value="metamask">MetaMask</option>
+            <option value="metamask">Browser Wallet (MetaMask, Rabby, Brave, etc.)</option>
             <option value="walletconnect">WalletConnect</option>
           </>
         );
       case 'cosmos':
         return <option value="keplr">Keplr</option>;
+      case 'polkadot':
+        return <option value="polkadot-js">Polkadot.js</option>;
       default:
         return null;
     }
@@ -115,6 +123,12 @@ export default function SignPage() {
       return Object.entries(CHAINS).map(([id, config]) => (
         <option key={id} value={id}>
           {config.chainName}
+        </option>
+      ));
+    } else if (selectedNetwork === 'polkadot') {
+      return SUBSTRATE_CHAINS.map((chain) => (
+        <option key={chain.name} value={chain.name}>
+          {chain.name}
         </option>
       ));
     }
@@ -139,23 +153,29 @@ export default function SignPage() {
             onChange={(e) => {
               setSelectedNetwork(e.target.value as NetworkType);
               // Reset wallet type when network changes
-              setWalletType(e.target.value === 'ethereum' ? 'metamask' : 'keplr');
+              setWalletType(
+                e.target.value === 'ethereum' ? 'metamask' :
+                e.target.value === 'cosmos' ? 'keplr' :
+                'polkadot-js'
+              );
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
             disabled={isConnected}
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
             <option value="cosmos">Cosmos</option>
-            <option value="polkadot" disabled>Polkadot (Coming Soon)</option>
+            <option value="polkadot">Polkadot</option>
           </select>
         </div>
 
-        {selectedNetwork === 'cosmos' && (
+        {(selectedNetwork === 'cosmos' || selectedNetwork === 'polkadot') && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 mb-2">Cosmos Chain</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              {selectedNetwork === 'cosmos' ? 'Cosmos Chain' : 'Polkadot Chain'}
+            </label>
             <select
               value={selectedChainId}
-              onChange={(e) => setSelectedChainId(e.target.value as CosmosChainId)}
+              onChange={(e) => setSelectedChainId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
               disabled={isConnected}
             >

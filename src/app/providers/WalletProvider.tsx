@@ -7,6 +7,10 @@ import { createWalletConnectProvider } from '../config/walletConnect';
 import { NetworkType, WalletType, WalletContextType, WalletState, CosmosChainId } from '../types/wallet';
 import { createSignature, createSignDoc } from '../../lib/cosmos/signing';
 import { hash } from '../../lib/utils';
+import { SubstrateWallet } from '../../lib/substrate/client-wallet';
+import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
+import { CHAINS } from '../../lib/cosmos/chains';
+import { WalletConnectProvider } from '@walletconnect/ethereum-provider';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -25,6 +29,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletConnectProvider, setWalletConnectProvider] = useState<any>(null);
   const [isWalletConnectInitialized, setIsWalletConnectInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [substrateWallet, setSubstrateWallet] = useState<SubstrateWallet | null>(null);
 
   useEffect(() => {
     console.log('WalletProvider: useEffect triggered');
@@ -100,7 +105,34 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         throw new Error('Wallet provider is still initializing. Please try again in a moment.');
       }
 
-      if (network === 'cosmos') {
+      if (network === 'polkadot') {
+        console.log('WalletProvider: Connecting to Polkadot network');
+        const wallet = new SubstrateWallet();
+        setSubstrateWallet(wallet);
+        
+        // Get the chain configuration
+        const chain = SUBSTRATE_CHAINS.find(c => c.name.toLowerCase() === chainId?.toLowerCase());
+        if (!chain) {
+          throw new Error('Invalid chain selected');
+        }
+
+        // Connect to the chain
+        await wallet.connect(chain);
+        
+        // Get the selected account
+        const selectedAccount = wallet.getSelectedAccount();
+        if (!selectedAccount) {
+          throw new Error('No account selected');
+        }
+
+        setState({
+          isConnected: true,
+          address: selectedAccount.address,
+          network: 'polkadot',
+          chainId: chain.name,
+          error: null,
+        });
+      } else if (network === 'cosmos') {
         console.log('WalletProvider: Connecting to Cosmos network');
         // Check if Keplr is installed
         if (!window.keplr) {
@@ -229,6 +261,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (state.network === 'ethereum' && walletConnectProvider) {
       console.log('WalletProvider: Disconnecting WalletConnect');
       await walletConnectProvider.disconnect();
+    } else if (state.network === 'polkadot' && substrateWallet) {
+      substrateWallet.disconnect();
+      setSubstrateWallet(null);
     }
     setSigner(null);
     setState(initialState);
@@ -242,7 +277,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      if (state.network === 'cosmos') {
+      if (state.network === 'polkadot') {
+        console.log('WalletProvider: Using Polkadot wallet to sign message');
+        if (!substrateWallet) {
+          throw new Error('Substrate wallet not initialized');
+        }
+        const chain = SUBSTRATE_CHAINS.find(c => c.name.toLowerCase() === String(state.chainId).toLowerCase());
+        if (!chain) {
+          throw new Error('Invalid chain selected');
+        }
+
+        const signature = await substrateWallet.signMessage(message, state.address, chain);
+        return signature;
+      } else if (state.network === 'cosmos') {
         console.log('WalletProvider: Using Keplr to sign message');
         if (!window.keplr) {
           console.error('WalletProvider: Keplr not connected');

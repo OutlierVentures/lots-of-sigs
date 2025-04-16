@@ -8,13 +8,17 @@ A privacy-first web application for cryptographically signing and verifying mess
 - Verify signed messages to confirm their authenticity
 - Support for multiple networks:
   - EVM-based networks (Ethereum, Polygon, etc.)
-  - Cosmos-based networks (coming soon)
-  - Substrate/Polkadot-based networks (coming soon)
+  - Cosmos-based networks (Cosmos Hub, Fetch, Agoric, etc.)
+  - Substrate/Polkadot-based networks (Polkadot, Kusama, etc.)
 - Support for multiple wallet types:
-  - MetaMask
+  - Browser wallets (MetaMask, Rabby, Brave Wallet, Fireblocks, etc.)
   - WalletConnect
+  - Keplr (for Cosmos networks)
+  - Polkadot.js (for Substrate networks)
 - JSON export/import of signed messages
 - Copy/paste functionality for easy sharing
+- Automatic network detection based on address format
+- Support for multiple chains within each network type
 
 ## Getting Started
 
@@ -22,7 +26,10 @@ A privacy-first web application for cryptographically signing and verifying mess
 
 - Node.js (v18 or later)
 - npm or yarn
-- A blockchain wallet (MetaMask or WalletConnect compatible)
+- A blockchain wallet:
+  - Browser wallet or WalletConnect (for EVM networks)
+  - Keplr (for Cosmos networks)
+  - Polkadot.js extension (for Substrate networks)
 
 ### Installation
 
@@ -54,20 +61,31 @@ npm run dev
 ### Signing Messages
 
 1. Navigate to the "Sign Message" page
-2. Select your preferred network
-3. Connect your wallet
-4. Enter the message you want to sign
-5. Click "Sign Message"
-6. Copy the signed message as JSON for sharing
+2. Select your preferred network type (Ethereum, Cosmos, or Polkadot)
+3. For Cosmos or Polkadot networks, select the specific chain
+4. Select your preferred wallet type:
+   - MetaMask or WalletConnect for EVM networks
+   - Keplr for Cosmos networks
+   - Polkadot.js for Substrate networks
+5. Connect your wallet
+6. Enter the message you want to sign
+7. Click "Sign Message"
+8. Copy the signed message as JSON for sharing
 
 ### Verifying Messages
 
 1. Navigate to the "Verify Message" page
-2. Either paste a JSON string or manually enter:
-   - The original message
-   - The signature
-   - The signer's address
-   - The network used
+2. You can verify messages in two ways:
+   - Paste the complete signed message JSON (recommended)
+     - Automatically detects the network type
+     - For Cosmos networks, detects the chain based on the address prefix
+     - Populates all fields automatically
+   - Or manually enter:
+     - The original message
+     - The signature
+     - The signer's address
+     - The network type
+     - The chain (for Cosmos and Polkadot networks)
 3. Click "Verify Message"
 4. View the verification result
 
@@ -216,6 +234,65 @@ The application provides two ways to verify messages:
    - Chain (for Cosmos networks)
 
 Both methods support verification across different networks and chains.
+
+### Polkadot Signatures
+
+This application supports signing and verifying messages using the Polkadot.js extension. Here are the key aspects of Polkadot signatures:
+
+#### Polkadot.js Extension Integration
+
+The application integrates with the Polkadot.js browser extension to:
+- Connect to user's Polkadot accounts
+- Sign messages using the extension's signer
+- Support multiple Substrate chains
+- Handle SSR (Server-Side Rendering) gracefully
+
+#### Message Signing Process
+
+When signing a message with Polkadot:
+1. The user connects their Polkadot.js extension
+2. The application creates a message signing request
+3. The extension signs the message using the user's private key
+4. The signature is returned in hex format
+5. The application creates a signed message object containing:
+   - The original message
+   - The hex-encoded signature
+   - The signer's address
+   - The network type ('polkadot')
+   - A timestamp
+
+#### Signature Format
+
+A Polkadot signature consists of:
+1. A hex-encoded signature string
+2. The signer's SS58-encoded address
+3. The message that was signed
+4. Network and timestamp metadata
+
+#### Verification Process
+
+Polkadot signature verification:
+1. Decodes the SS58 address to get the public key
+2. Converts the hex signature to a Uint8Array
+3. Verifies the signature using the public key
+4. Compares the recovered address with the expected address
+5. Returns true if the signature is valid
+
+#### Supported Chains
+
+The application supports multiple Substrate chains:
+- Polkadot
+- Kusama
+- And other Substrate-based chains
+
+The chain is automatically detected based on the address format and can be selected in the UI.
+
+#### Security Considerations
+
+- All signing operations are performed in the browser extension
+- Private keys never leave the extension
+- The application uses the extension's secure signing interface
+- Messages are signed in their raw form without modification
 
 ## Development
 

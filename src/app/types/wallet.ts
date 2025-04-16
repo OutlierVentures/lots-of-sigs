@@ -1,6 +1,6 @@
 export type NetworkType = 'ethereum' | 'cosmos' | 'polkadot';
 export type CosmosChainId = 'cosmoshub-4' | 'fetchhub-4' | 'agoric-3' | 'cheqd-mainnet-1' | 'secret-4';
-export type WalletType = 'metamask' | 'walletconnect' | 'keplr';
+export type WalletType = 'metamask' | 'walletconnect' | 'keplr' | 'polkadot-js';
 
 export interface WalletState {
   isConnected: boolean;

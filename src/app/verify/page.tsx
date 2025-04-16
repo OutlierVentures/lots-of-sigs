@@ -13,6 +13,8 @@ import { SignedMessage } from '../types/message';
 import { verifySignature, extractMessage } from '../../lib/cosmos/signing';
 import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
+import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
+import { verifyMessage as verifySubstrateMessage } from '../../lib/substrate/signing';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -117,15 +119,79 @@ export default function VerifyPage() {
           setVerificationResult(false);
           setVerificationMessage('Verification failed');
         }
+      } else if (selectedNetwork === 'polkadot') {
+        try {
+          // Parse the signed message JSON if it's a string
+          let signedMessage: SignedMessage;
+          if (typeof signature === 'string') {
+            try {
+              signedMessage = JSON.parse(signature);
+            } catch (e) {
+              // If parsing fails, create a signed message object from the raw signature
+              signedMessage = {
+                message,
+                signature: typeof signature === 'string' ? signature : JSON.stringify(signature),
+                address,
+                network: 'polkadot',
+                timestamp: new Date().toISOString()
+              };
+            }
+          } else {
+            signedMessage = signature as SignedMessage;
+          }
+
+          // For Polkadot, we don't need the chain for verification
+          // The signature verification is chain-agnostic
+          const isValid = await verifySubstrateMessage(signedMessage, {
+            name: 'polkadot',
+            rpcUrl: '', // Not needed for verification
+            ss58Format: 0 // Not needed for verification
+          });
+          setVerificationResult(isValid);
+          
+          if (isValid) {
+            setVerificationMessage('Message verification successful!');
+          } else {
+            setVerificationMessage('Message verification failed');
+          }
+        } catch (e) {
+          console.error('Verification error:', e);
+          setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+          setVerificationResult(false);
+          setVerificationMessage('Verification failed');
+        }
+      } else if (selectedNetwork === 'ethereum') {
+        try {
+          console.log('Verifying Ethereum signature:', {
+            message,
+            signature,
+            address
+          });
+          
+          // For EVM chains, use ethers.js verifyMessage
+          const recoveredAddress = await verifyMessage(message, signature);
+          console.log('Recovered address:', recoveredAddress);
+          console.log('Expected address:', address);
+          
+          const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
+          console.log('Verification result:', isValid);
+          
+          setVerificationResult(isValid);
+          
+          if (isValid) {
+            setVerificationMessage('Message verification successful!');
+          } else {
+            setVerificationMessage('Message verification failed');
+          }
+        } catch (e) {
+          console.error('Verification error:', e);
+          setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+          setVerificationResult(false);
+          setVerificationMessage('Message verification failed');
+        }
       } else {
-        // Handle other networks (Ethereum, etc.)
-        setError('Network not supported yet');
+        setError('Network not supported');
       }
-    } catch (error) {
-      console.error('Verification error:', error);
-      setError(error instanceof Error ? error.message : 'Verification failed');
-      setVerificationResult(false);
-      setVerificationMessage('Verification failed');
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +217,7 @@ export default function VerifyPage() {
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
             <option value="cosmos">Cosmos</option>
-            <option value="polkadot" disabled>Polkadot (Coming Soon)</option>
+            <option value="polkadot">Polkadot</option>
           </select>
         </div>
 
@@ -173,7 +239,25 @@ export default function VerifyPage() {
         )}
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Signed Message JSON</label>
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-medium text-gray-900">Signed Message JSON</label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setJsonInput(text);
+                  handleJsonInputChange({ target: { value: text } } as React.ChangeEvent<HTMLTextAreaElement>);
+                } catch (err) {
+                  console.error('Failed to read clipboard:', err);
+                  setError('Failed to read from clipboard. Please paste manually.');
+                }
+              }}
+            >
+              Paste
+            </Button>
+          </div>
           <textarea
             value={jsonInput}
             onChange={handleJsonInputChange}
