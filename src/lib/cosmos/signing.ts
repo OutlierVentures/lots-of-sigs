@@ -209,11 +209,16 @@ export async function verifySignature(
     console.log('Message hash:', Buffer.from(messageHash).toString('hex'));
 
     // Create the signature object
-    const sig = new ExtendedSecp256k1Signature(
-      sigBytes.slice(0, 32),
-      sigBytes.slice(32, 64),
-      0  // Recovery value is not used in this case
-    );
+    const r = sigBytes.slice(0, 32);
+    const s = sigBytes.slice(32, 64);
+    
+    // Ensure r and s are properly padded to 32 bytes
+    const paddedR = new Uint8Array(32);
+    const paddedS = new Uint8Array(32);
+    paddedR.set(r, 32 - r.length);
+    paddedS.set(s, 32 - s.length);
+    
+    const sig = new ExtendedSecp256k1Signature(paddedR, paddedS, 0);
     console.log('Signature object:', {
       r: Buffer.from(sig.r(32)).toString('hex'),
       s: Buffer.from(sig.s(32)).toString('hex'),
