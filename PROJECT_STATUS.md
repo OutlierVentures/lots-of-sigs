@@ -80,9 +80,9 @@
 
 ### Cosmos Network Testing
 - [x] Test with Cosmos Hub
-- [ ] Test with other Cosmos chains
-- [ ] Document network-specific features
-- [ ] Create network configuration
+- [x] Test with other Cosmos chains including fetchhub-4 and agoric-3
+- [x] Document network-specific features
+- [x] Create network configuration
 
 ## Phase 4: Substrate/Polkadot Support
 ### Substrate Wallet Integration
@@ -175,6 +175,9 @@
 - Cosmos ADR-36 implementation
 - Cosmos verification with both compressed and uncompressed keys
 - Cross-chain verification testing
+- Support for multiple Cosmos chains (Cosmos Hub, Fetch, Agoric)
+- Auto-selection of chain based on address prefix
+- Improved verification UI with both JSON paste and manual input options
 
 ## Blockers
 - None currently: All core functionality is implemented and tested

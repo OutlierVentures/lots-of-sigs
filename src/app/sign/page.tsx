@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '../providers/WalletProvider';
-import { NetworkType, WalletType } from '../types/wallet';
+import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { SignedMessage } from '../types/message';
 import { Button } from '../components/ui/Button';
+import { CHAINS } from '../../lib/cosmos/chains';
 
 export default function SignPage() {
-  const { isConnected, address, network, error: walletError, actions } = useWallet();
+  const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
   const [message, setMessage] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
+  const [selectedChainId, setSelectedChainId] = useState<CosmosChainId>('cosmoshub-4');
   const [signature, setSignature] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,8 +29,8 @@ export default function SignPage() {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Connecting to wallet:', { selectedNetwork, walletType });
-      await actions.connect(selectedNetwork, walletType);
+      console.log('Connecting to wallet:', { selectedNetwork, walletType, selectedChainId });
+      await actions.connect(selectedNetwork, walletType, selectedChainId);
     } catch (err) {
       console.error('Failed to connect wallet:', err);
       setError(err instanceof Error ? err.message : 'Failed to connect wallet');
@@ -108,6 +110,17 @@ export default function SignPage() {
     }
   };
 
+  const getChainOptions = () => {
+    if (selectedNetwork === 'cosmos') {
+      return Object.entries(CHAINS).map(([id, config]) => (
+        <option key={id} value={id}>
+          {config.chainName}
+        </option>
+      ));
+    }
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
@@ -136,6 +149,20 @@ export default function SignPage() {
             <option value="polkadot" disabled>Polkadot (Coming Soon)</option>
           </select>
         </div>
+
+        {selectedNetwork === 'cosmos' && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-900 mb-2">Cosmos Chain</label>
+            <select
+              value={selectedChainId}
+              onChange={(e) => setSelectedChainId(e.target.value as CosmosChainId)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+              disabled={isConnected}
+            >
+              {getChainOptions()}
+            </select>
+          </div>
+        )}
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-2">Wallet Type</label>

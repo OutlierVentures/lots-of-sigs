@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -11,74 +11,75 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { verifyMessage } from 'ethers';
 import { SignedMessage } from '../types/message';
 import { verifySignature, extractMessage } from '../../lib/cosmos/signing';
+import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
+import { CHAINS } from '../../lib/cosmos/chains';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
   const [signature, setSignature] = useState('');
   const [address, setAddress] = useState('');
-  const [selectedNetwork, setSelectedNetwork] = useState<'ethereum' | 'cosmos' | 'polkadot' | ''>('');
+  const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
+  const [selectedChainId, setSelectedChainId] = useState<CosmosChainId>('cosmoshub-4');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
-  const [jsonInput, setJsonInput] = useState('');
   const [verificationMessage, setVerificationMessage] = useState('');
-
-  const handleImportFromJSON = (jsonString: string) => {
-    try {
-      const signedMessage: SignedMessage = JSON.parse(jsonString);
-      setMessage(signedMessage.message);
-      setSignature(signedMessage.signature);
-      setAddress(signedMessage.address);
-      setSelectedNetwork(signedMessage.network);
-      setError(null);
-    } catch (err) {
-      setError('Invalid JSON format');
-    }
-  };
+  const [jsonInput, setJsonInput] = useState('');
 
   const handleJsonInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setJsonInput(e.target.value);
-    try {
-      const signedMessage: SignedMessage = JSON.parse(e.target.value);
-      setMessage(signedMessage.message);
-      setSignature(signedMessage.signature);
-      setAddress(signedMessage.address);
-      setSelectedNetwork(signedMessage.network);
-      setError(null);
-    } catch (err) {
-      // Don't show error while typing
-    }
-  };
-
-  const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      handleImportFromJSON(text);
-      setJsonInput(text);
-    } catch (err) {
-      console.error('Failed to paste text:', err);
-    }
-  };
-
-  const handleVerify = async () => {
-    setIsLoading(true);
+    const input = e.target.value;
+    setJsonInput(input);
     setError(null);
     setVerificationResult(null);
     setVerificationMessage('');
 
     try {
-      let parsedJson;
-      try {
-        parsedJson = JSON.parse(jsonInput);
-        console.log('Parsed JSON:', parsedJson);
-      } catch (e) {
-        throw new Error('Invalid JSON format');
+      const parsedJson = JSON.parse(input);
+      console.log('Parsed JSON:', parsedJson);
+
+      // Auto-select network based on the JSON
+      if (parsedJson.network) {
+        setSelectedNetwork(parsedJson.network);
       }
 
-      const { message, signature, address } = parsedJson;
-      if (!message || !signature || !address) {
-        throw new Error('JSON must contain message, signature, and address fields');
+      // For Cosmos networks, try to determine the chain ID from the address prefix
+      if (parsedJson.network === 'cosmos' && parsedJson.address) {
+        const prefix = parsedJson.address.split('1')[0];
+        // Find the chain ID that matches this prefix
+        const chainEntry = Object.entries(CHAINS).find(([_, config]) => 
+          config.bech32Prefix === prefix
+        );
+        if (chainEntry) {
+          setSelectedChainId(chainEntry[0] as CosmosChainId);
+        }
       }
+
+      // Update message, signature, and address from the JSON
+      if (parsedJson.message) {
+        setMessage(parsedJson.message);
+      }
+      if (parsedJson.signature) {
+        setSignature(typeof parsedJson.signature === 'string' ? parsedJson.signature : JSON.stringify(parsedJson.signature));
+      }
+      if (parsedJson.address) {
+        setAddress(parsedJson.address);
+      }
+    } catch (e) {
+      // Ignore JSON parsing errors as the user might be in the middle of typing
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!message || !signature || !address || !selectedNetwork) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      setVerificationResult(null);
+      setVerificationMessage('');
 
       if (selectedNetwork === 'cosmos') {
         try {
@@ -116,17 +117,13 @@ export default function VerifyPage() {
           setVerificationResult(false);
           setVerificationMessage('Verification failed');
         }
-      } else if (selectedNetwork === 'ethereum') {
-        // Verify the message using ethers.js
-        const recoveredAddress = verifyMessage(message, signature);
-        const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
-        setVerificationResult(isValid);
-        setVerificationMessage(isValid ? 'Message verification successful!' : 'Message verification failed');
       } else {
-        throw new Error(`${selectedNetwork} verification not implemented yet`);
+        // Handle other networks (Ethereum, etc.)
+        setError('Network not supported yet');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification failed');
+    } catch (error) {
+      console.error('Verification error:', error);
+      setError(error instanceof Error ? error.message : 'Verification failed');
       setVerificationResult(false);
       setVerificationMessage('Verification failed');
     } finally {
@@ -135,124 +132,111 @@ export default function VerifyPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader>
-          <h1 className="text-2xl font-semibold text-gray-900">Verify Message</h1>
-          <p className="text-sm text-gray-900">
-            Verify a signed message to confirm its authenticity
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {verificationResult !== null && (
-            <div className={`p-4 rounded-md border ${
-              verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-            }`}>
-              <p className={`text-sm ${
-                verificationResult ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {verificationMessage}
-              </p>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium text-gray-900">
-                Paste Signed Message JSON
-              </label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePaste()}
-              >
-                Paste
-              </Button>
-            </div>
-            <textarea
-              value={jsonInput}
-              onChange={handleJsonInputChange}
-              rows={8}
-              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono"
-              placeholder="Paste your signed message JSON here..."
-            />
+    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Verify Message</h1>
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{error}</p>
           </div>
+        )}
 
-          <div className="space-y-2">
-            <label htmlFor="message" className="block text-sm font-medium text-gray-900">
-              Message
-            </label>
-            <textarea
-              id="message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Enter the message to verify..."
-            />
-          </div>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-900 mb-2">Network Type</label>
+          <select
+            value={selectedNetwork}
+            onChange={(e) => setSelectedNetwork(e.target.value as NetworkType)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+          >
+            <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
+            <option value="cosmos">Cosmos</option>
+            <option value="polkadot" disabled>Polkadot (Coming Soon)</option>
+          </select>
+        </div>
 
-          <div className="space-y-2">
-            <label htmlFor="signature" className="block text-sm font-medium text-gray-900">
-              Signature
-            </label>
-            <textarea
-              id="signature"
-              value={signature}
-              onChange={(e) => setSignature(e.target.value)}
-              rows={4}
-              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono"
-              placeholder="Enter the signature to verify..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-900">
-              Address
-            </label>
-            <input
-              type="text"
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Enter the signer's address..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="network" className="block text-sm font-medium text-gray-900">
-              Network
-            </label>
+        {selectedNetwork === 'cosmos' && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-900 mb-2">Chain</label>
             <select
-              id="network"
-              value={selectedNetwork}
-              onChange={(e) => setSelectedNetwork(e.target.value as 'ethereum' | 'cosmos' | 'polkadot' | '')}
-              className="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              value={selectedChainId}
+              onChange={(e) => setSelectedChainId(e.target.value as CosmosChainId)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
             >
-              <option value="">Select a network</option>
-              <option value="ethereum">Ethereum</option>
-              <option value="cosmos">Cosmos</option>
-              <option value="polkadot">Polkadot</option>
+              {Object.entries(CHAINS).map(([id, config]) => (
+                <option key={id} value={id}>
+                  {config.chainName}
+                </option>
+              ))}
             </select>
           </div>
+        )}
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleVerify}
-              disabled={!message || !signature || !address || !selectedNetwork || isLoading}
-            >
-              {isLoading ? 'Verifying...' : 'Verify Message'}
-            </Button>
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-900 mb-2">Signed Message JSON</label>
+          <textarea
+            value={jsonInput}
+            onChange={handleJsonInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            rows={10}
+            placeholder="Paste the signed message JSON here..."
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-900 mb-2">Message</label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            rows={4}
+            placeholder="Enter the message to verify..."
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-900 mb-2">Signature</label>
+          <textarea
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-mono"
+            rows={4}
+            placeholder="Enter the signature to verify..."
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-900 mb-2">Address</label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            placeholder="Enter the signer's address..."
+          />
+        </div>
+
+        {verificationResult !== null && (
+          <div className={`p-4 rounded-md border ${
+            verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+          }`}>
+            <p className={`text-sm ${
+              verificationResult ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {verificationMessage}
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleVerify}
+            disabled={!message || !signature || !address || !selectedNetwork || isLoading}
+          >
+            {isLoading ? 'Verifying...' : 'Verify Message'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 } 

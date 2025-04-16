@@ -122,6 +122,7 @@ ADR-36 is the standard for off-chain message signing in the Cosmos ecosystem. It
 - A specific message format for signing arbitrary data
 - A standardized way to verify signatures
 - Support for multiple message types and formats
+- Empty chain ID and fee amount for off-chain messages
 
 #### Signature Format
 
@@ -129,12 +130,12 @@ A Cosmos signature consists of three main components:
 1. `signature`: The actual cryptographic signature (base64 encoded)
 2. `pub_key`: The public key of the signer (base64 encoded)
 3. `sign_doc`: The document that was signed, containing:
-   - `chain_id`: The chain identifier (empty for off-chain messages)
-   - `account_number`: The account number (0 for off-chain messages)
-   - `sequence`: The sequence number (0 for off-chain messages)
-   - `fee`: Transaction fee (empty for off-chain messages)
+   - `chain_id`: Empty string for off-chain messages
+   - `account_number`: "0" for off-chain messages
+   - `sequence`: "0" for off-chain messages
+   - `fee`: Empty array for off-chain messages
    - `msgs`: The message array containing the actual data
-   - `memo`: Optional memo field
+   - `memo`: Empty string
 
 #### Public Key Formats
 
@@ -177,17 +178,44 @@ When using Keplr wallet:
 4. Addresses are derived from the public key using:
    - SHA-256 hash of the public key
    - RIPEMD-160 hash of the SHA-256 result
-   - Bech32 encoding with 'cosmos' prefix
+   - Bech32 encoding with the appropriate chain prefix
+
+#### Supported Chains
+
+The application supports multiple Cosmos chains:
+- Cosmos Hub (cosmos)
+- Fetch (fetch)
+- Agoric (agoric)
+- And more...
+
+The chain is automatically detected based on the address prefix (e.g., 'cosmos1...', 'fetch1...', 'agoric1...').
 
 #### Verification Process
 
-The verification process:
+Cosmos signature verification:
 1. Decodes the base64 signature and public key
 2. Determines the public key format (compressed/uncompressed)
 3. Creates a sorted version of the sign document
 4. Calculates the message hash
 5. Verifies the signature using the public key
-6. Verifies the signer's address matches the expected address
+6. Derives the address from the public key using the correct chain prefix
+7. Compares the derived address with the expected address
+
+### Message Verification
+
+The application provides two ways to verify messages:
+1. Paste the complete signed message JSON
+   - Automatically detects the network type
+   - For Cosmos networks, detects the chain based on the address prefix
+   - Populates all fields automatically
+2. Enter the fields manually
+   - Message
+   - Signature
+   - Address
+   - Network type
+   - Chain (for Cosmos networks)
+
+Both methods support verification across different networks and chains.
 
 ## Development
 

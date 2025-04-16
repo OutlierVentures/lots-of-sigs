@@ -1,6 +1,7 @@
 import { Secp256k1, ExtendedSecp256k1Signature } from '@cosmjs/crypto';
 import { fromBase64, toBech32, toBase64 } from '@cosmjs/encoding';
 import { sha256, ripemd160 } from '@cosmjs/crypto';
+import { ChainConfig, getChainConfig } from './chains';
 
 export interface SignDoc {
   chain_id: string;
@@ -33,19 +34,21 @@ export interface SignatureData {
  * Creates an ADR-36 compatible sign document
  * @param message - The message to sign
  * @param signer - The address of the signer
+ * @param chainId - The chain ID
  * @returns The sign document
  */
-export function createSignDoc(message: string, signer: string): SignDoc {
+export function createSignDoc(message: string, signer: string, chainId: string = 'cosmoshub-4'): SignDoc {
+  const chainConfig = getChainConfig(chainId);
   // Base64 encode the message as required by ADR-36
   const base64Data = Buffer.from(message).toString('base64');
   
   return {
-    chain_id: "",
+    chain_id: "",  // Empty string for ADR-36
     account_number: "0",
     sequence: "0",
     fee: {
       gas: "0",
-      amount: [],
+      amount: [],  // Empty array for ADR-36
     },
     msgs: [
       {
@@ -233,7 +236,9 @@ export async function verifySignature(
     // For address verification, use the original compressed public key
     // as Cosmos addresses are always derived from compressed keys
     const pubKeyHash = ripemd160(sha256(compressedPubKeyBytes));
-    const derivedAddress = toBech32('cosmos', pubKeyHash);
+    // Extract the prefix from the expected address (e.g., 'fetch' from 'fetch1...')
+    const prefix = expectedAddress.split('1')[0];
+    const derivedAddress = toBech32(prefix, pubKeyHash);
     console.log('Address verification:', {
       derivedAddress,
       expectedAddress,

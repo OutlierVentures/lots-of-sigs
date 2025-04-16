@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import { SignedMessage } from '../types/message';
 import { createWalletConnectProvider } from '../config/walletConnect';
-import { NetworkType, WalletType, WalletContextType, WalletState } from '../types/wallet';
+import { NetworkType, WalletType, WalletContextType, WalletState, CosmosChainId } from '../types/wallet';
 import { createSignature, createSignDoc } from '../../lib/cosmos/signing';
 import { hash } from '../../lib/utils';
 
@@ -91,8 +91,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setSigner(null);
   };
 
-  const connect = async (network: NetworkType, walletType: WalletType = 'metamask') => {
-    console.log('WalletProvider: Connecting wallet', { network, walletType });
+  const connect = async (network: NetworkType, walletType: WalletType = 'metamask', chainId?: string) => {
+    console.log('WalletProvider: Connecting wallet', { network, walletType, chainId });
     try {
       setState(prev => ({ ...prev, error: null }));
       
@@ -108,13 +108,17 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           throw new Error('Please install Keplr extension');
         }
 
-        // Enable Keplr for Cosmos Hub
-        console.log('WalletProvider: Enabling Keplr for cosmoshub-4');
-        await window.keplr.enable('cosmoshub-4');
+        if (!chainId) {
+          throw new Error('Chain ID is required for Cosmos networks');
+        }
+
+        // Enable Keplr for the selected chain
+        console.log('WalletProvider: Enabling Keplr for', chainId);
+        await window.keplr.enable(chainId);
         
         // Get the offline signer
         console.log('WalletProvider: Getting offline signer');
-        const offlineSigner = window.keplr.getOfflineSigner('cosmoshub-4');
+        const offlineSigner = window.keplr.getOfflineSigner(chainId);
         if (!offlineSigner) {
           console.error('WalletProvider: Failed to get offline signer');
           throw new Error('Failed to get offline signer from Keplr');
@@ -133,6 +137,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           isConnected: true,
           address: accounts[0].address,
           network: 'cosmos',
+          chainId,
           error: null,
         });
       } else if (network === 'ethereum') {
@@ -252,11 +257,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
         // Create the sign document using our library
         const signDoc = createSignDoc(message, state.address);
+        // For ADR-36 signing, chain_id should be empty string
+        signDoc.chain_id = '';
         console.log('Created sign document:', JSON.stringify(signDoc, null, 2));
 
         // Use Keplr's signAmino for ADR-36 signing
         const signResponse = await window.keplr.signAmino(
-          'cosmoshub-4',
+          state.chainId || 'cosmoshub-4',
           state.address,
           signDoc
         );
