@@ -54,8 +54,8 @@ A privacy-first web application for cryptographically signing and verifying mess
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/blockchain-signed-messages-offline.git
-cd blockchain-signed-messages-offline
+git clone https://github.com/OutlierVentures/lots-of-sigs.git
+cd lots-of-sigs
 ```
 
 2. Install dependencies:
