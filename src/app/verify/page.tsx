@@ -15,6 +15,7 @@ import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
 import { verifyMessage as verifySubstrateMessage, SignedMessage as SubstrateSignedMessage } from '../../lib/substrate/signing';
+import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -32,6 +33,20 @@ export default function VerifyPage() {
     chain?: string;
   } | null>(null);
   const [jsonInput, setJsonInput] = useState('');
+
+  const handleFileUpload = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        setJsonInput(content);
+        handleJsonInputChange({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>);
+      };
+      reader.readAsText(file);
+    }
+  };
 
   const handleJsonInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const input = e.target.value;
@@ -369,29 +384,30 @@ export default function VerifyPage() {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-900">Signed Message JSON</label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const text = await navigator.clipboard.readText();
-                  setJsonInput(text);
-                  handleJsonInputChange({ target: { value: text } } as React.ChangeEvent<HTMLTextAreaElement>);
-                } catch (err) {
-                  console.error('Failed to read clipboard:', err);
-                  setError('Failed to read from clipboard. Please paste manually.');
-                }
-              }}
-            >
-              Paste
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.json';
+                  input.onchange = handleFileUpload;
+                  input.click();
+                }}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <Upload className="h-4 w-4" />
+                Upload
+              </Button>
+            </div>
           </div>
           <textarea
             value={jsonInput}
             onChange={handleJsonInputChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
             rows={10}
-            placeholder="Paste the signed message JSON here..."
+            placeholder="Paste the signed message JSON here or upload a file..."
           />
         </div>
 
@@ -493,8 +509,14 @@ export default function VerifyPage() {
           <Button
             onClick={handleVerify}
             disabled={!message || !signature || !address || !selectedNetwork || isLoading}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
           >
-            {isLoading ? 'Verifying...' : 'Verify Message'}
+            {isLoading ? 'Verifying...' : (
+              <>
+                <Search className="h-4 w-4" />
+                Verify Message
+              </>
+            )}
           </Button>
         </div>
       </div>

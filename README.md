@@ -17,11 +17,13 @@ A privacy-first web application for cryptographically signing and verifying mess
 - **Message Signing**
   - Sign messages with any supported wallet
   - Automatic chain detection
-  - Local storage of signed messages
-  - Export/import functionality
+  - Download signed messages as JSON files
+  - Standardized filename format ([address]-YYYYMMDDHHmmss.json)
+  - Copy/paste functionality
 
 - **Message Verification**
   - Verify messages from any supported network
+  - Upload signature files for verification
   - Detailed verification feedback
   - Network-specific verification details
   - Comprehensive result display
@@ -145,16 +147,21 @@ Note: The first port number in the `-p` flag is the host port, and the second is
 5. Connect your wallet
 6. Enter the message you want to sign
 7. Click "Sign Message"
-8. Copy the signed message as JSON for sharing
+8. After signing:
+   - Download the signed message as a JSON file
+   - Copy the signature or complete JSON
+   - Share the downloaded file for verification
 
 ### Verifying Messages
 
 1. Navigate to the Verify page
 2. Choose your verification method:
+   - **Upload File**: Select a previously downloaded signature file
    - **JSON Input**: Paste the complete signed message JSON
    - **Manual Input**: Enter message details manually
-3. Click "Verify Message"
-4. View detailed verification results:
+3. For uploaded files or pasted JSON, fields will be auto-populated
+4. Click "Verify Message"
+5. View detailed verification results:
    - Signature validity
    - Network-specific checks
    - Message content verification

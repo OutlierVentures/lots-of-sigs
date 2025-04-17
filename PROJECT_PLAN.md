@@ -78,10 +78,14 @@ A privacy-first web application for cryptographically signing and verifying mess
 - Documentation updates
 - Cross-browser compatibility
 
-### Phase 5: Finetuning (Completed)
-- Enhanced user experience
-- Improved verification feedback
-- Security enhancements
+### Phase 5: Finetuning
+- Enhanced UX feedback for verification
+  - [x] Detailed verification checks
+  - [x] Network-specific verification details
+  - [x] Clear success/failure messages
+  - [x] Improved error handling
+  - [x] Signature file download/upload support
+  - [x] Standardized filename format for downloads
 
 ## Current Focus
 - Final project review
@@ -96,4 +100,12 @@ A privacy-first web application for cryptographically signing and verifying mess
 - Comprehensive test coverage
 - Cross-chain compatibility
 - Robust error handling
-- Clear documentation 
+- Clear documentation
+
+## Future Considerations
+- EIP-1271 signature support for smart contract wallets
+- Support for additional Cosmos chains
+- Support for additional Substrate chains
+- Enhanced signature format compatibility
+- Batch signature verification
+- Signature expiration support 

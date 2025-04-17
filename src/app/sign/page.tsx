@@ -7,6 +7,7 @@ import { SignedMessage } from '../types/message';
 import { Button } from '../components/ui/Button';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
+import { Copy, Download, PenLine, Wallet, LogOut } from 'lucide-react';
 
 export default function SignPage() {
   const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
@@ -200,9 +201,14 @@ export default function SignPage() {
           <button
             onClick={handleConnect}
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
-            {isLoading ? 'Connecting...' : 'Connect Wallet'}
+            {isLoading ? 'Connecting...' : (
+              <>
+                <Wallet className="h-4 w-4" />
+                Connect Wallet
+              </>
+            )}
           </button>
         ) : (
           <div className="space-y-4">
@@ -226,49 +232,91 @@ export default function SignPage() {
               <button
                 onClick={handleSign}
                 disabled={isLoading || !message.trim()}
-                className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                {isLoading ? 'Signing...' : 'Sign Message'}
+                {isLoading ? 'Signing...' : (
+                  <>
+                    <PenLine className="h-4 w-4" />
+                    Sign Message
+                  </>
+                )}
               </button>
               <button
                 onClick={handleDisconnect}
                 disabled={isLoading}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
+                <LogOut className="h-4 w-4" />
                 Disconnect
               </button>
             </div>
 
             {signature && (
               <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-md">
+                <div>
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm text-gray-900">Signature:</p>
+                    <label className="block text-sm font-medium text-gray-900">Signature</label>
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
                       onClick={() => handleCopy(signature)}
+                      className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
                     >
+                      <Copy className="h-4 w-4" />
                       Copy
                     </Button>
                   </div>
-                  <p className="text-sm font-mono break-all text-gray-900">{signature}</p>
+                  <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                    <p className="text-sm font-mono break-all text-gray-900">{signature}</p>
+                  </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <label className="block text-sm font-medium text-gray-900">Signed Message JSON</label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopy(signedMessage)}
-                    >
-                      Copy
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleCopy(signedMessage)}
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => {
+                          const signedMessageObj = JSON.parse(signedMessage);
+                          const timestamp = new Date(signedMessageObj.timestamp)
+                            .toISOString()
+                            .replace(/[-:]/g, '')
+                            .replace('T', '')
+                            .split('.')[0];
+                          const filename = `${address}-${timestamp}.json`;
+                          const blob = new Blob([signedMessage], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = filename;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </Button>
+                    </div>
                   </div>
-                  <pre className="p-4 bg-gray-50 rounded-md text-sm font-mono break-all text-gray-900">
-                    {signedMessage}
-                  </pre>
+                  <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                    <pre className="text-sm font-mono break-all text-gray-900 whitespace-pre-wrap overflow-x-auto">
+                      {signedMessage}
+                    </pre>
+                  </div>
                 </div>
               </div>
             )}

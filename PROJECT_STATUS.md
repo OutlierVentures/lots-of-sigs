@@ -33,6 +33,7 @@
 - [x] Enhanced error messages and feedback
 - [x] Improved verification result display
 - [x] Test WalletConnect end to end with a Safe{Wallet}
+- [x] Download/upload for signatures
 
 ## Current Focus
 - Project completion and final review
