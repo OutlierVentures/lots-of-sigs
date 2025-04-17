@@ -218,24 +218,32 @@ export async function verifySignature(
     paddedR.set(r, 32 - r.length);
     paddedS.set(s, 32 - s.length);
     
-    const sig = new ExtendedSecp256k1Signature(paddedR, paddedS, 0);
-    console.log('Signature object:', {
-      r: Buffer.from(sig.r(32)).toString('hex'),
-      s: Buffer.from(sig.s(32)).toString('hex'),
-      recovery: 0,
-    });
-
-    // Verify the signature
-    console.log('Verifying signature with:', {
-      messageHash: Buffer.from(messageHash).toString('hex'),
-      pubKeyBytes: Buffer.from(pubKeyBytes).toString('hex'),
-      sigBytes: Buffer.from(sigBytes).toString('hex'),
-    });
-    const isValid = await Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
-    console.log('Signature verification result:', isValid);
+    // Try both possible recovery parameters (0 and 1)
+    let isValid = false;
+    for (let v = 0; v <= 1; v++) {
+        const sig = new ExtendedSecp256k1Signature(paddedR, paddedS, v);
+        console.log('Trying signature with recovery param:', v, {
+            r: Buffer.from(sig.r(32)).toString('hex'),
+            s: Buffer.from(sig.s(32)).toString('hex'),
+            recovery: v,
+        });
+        
+        try {
+            isValid = await Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
+            if (isValid) {
+                console.log('Signature verified with recovery param:', v);
+                break;
+            }
+        } catch (error) {
+            console.log('Verification failed with recovery param:', v, error);
+            continue;
+        }
+    }
+    
+    console.log('Final signature verification result:', isValid);
 
     if (!isValid) {
-      return false;
+        return false;
     }
 
     // For address verification, use the original compressed public key

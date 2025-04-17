@@ -178,5 +178,24 @@ describe('Substrate Integration', () => {
       const isValid = await verifyMessage(signedMessage, testChain);
       expect(isValid).toBe(false);
     });
+
+    it('should verify message with Bytes wrapper', async () => {
+      const message = 'ooo';
+      const wrappedMessage = `<Bytes>${message}</Bytes>`;
+      const signature = '0x6ee5eea7965cff4907111540cb650aded2b8d11e62a086c29a04a887e47ca948c796c32f8a08a869c626a1b81da34a214eab672695fddc3f1549f22d0c87fa88';
+      const address = '147xU4gU4iWMtzmLarCJrhPsR95PEQWtphtXM56EqhjHGC3F';
+      
+      const signedMessage: SignedMessage = {
+        message: wrappedMessage,
+        signature,
+        address,
+        chain: 'polkadot',
+        network: 'polkadot',
+        timestamp: new Date().toISOString()
+      };
+
+      const isValid = await verifyMessage(signedMessage, testChain);
+      expect(isValid).toBe(true);
+    });
   });
 }); 

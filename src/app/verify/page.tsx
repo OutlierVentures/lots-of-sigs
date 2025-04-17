@@ -8,16 +8,12 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { verifyMessage } from 'ethers';
-import { SignedMessage } from '../types/message';
-import { verifySignature, extractMessage } from '../../lib/cosmos/signing';
-import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
+import { NetworkType, CosmosChainId } from '@/app/types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { SUBSTRATE_CHAINS, getChainByAddress, getChainByName, SubstrateChain, DEFAULT_CHAIN, getAllChains } from '@/lib/substrate/chains';
-import { verifyMessage as verifySubstrateMessage, SignedMessage as SubstrateSignedMessage } from '../../lib/substrate/signing';
 import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { determineChain } from '../../lib/substrate/chain-utils';
-import { parseSignature } from '@/lib/signature/format';
+import { VerificationService } from '@/lib/verification/verification.service';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -37,47 +33,35 @@ export default function VerifyPage() {
   const [jsonInput, setJsonInput] = useState('');
   const [detectedChain, setDetectedChain] = useState<SubstrateChain | null>(null);
 
-  const handleFileUpload = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const content = e.target?.result as string;
-        setJsonInput(content);
-        // Process the JSON and wait for state updates
-        await handleJsonInputChange({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>);
-        // Small delay to ensure state updates are complete
-        await new Promise(resolve => setTimeout(resolve, 100));
-        // Now verify if we have all required fields
-        if (message && signature && address && selectedNetwork) {
-          await handleVerify();
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleJsonInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const input = e.target.value;
-    setJsonInput(input);
-    setError(null);
+  const clearPreviousResults = () => {
     setVerificationResult(null);
     setVerificationMessage('');
+    setVerificationDetails(null);
+    setError(null);
+  };
+
+  const processJsonAndVerify = async (jsonString: string) => {
+    console.log('Starting processJsonAndVerify');
+    clearPreviousResults();
 
     try {
-      const parsedJson = JSON.parse(input);
-      console.log('Parsed JSON:', parsedJson);
-
-      // Auto-select network based on the JSON
-      if (parsedJson.network) {
-        setSelectedNetwork(parsedJson.network);
+      const parsedInput = VerificationService.parseJsonInput(jsonString);
+      if (!parsedInput) {
+        setError('Invalid JSON format');
+        return;
       }
+      console.log('Parsed input:', parsedInput);
+
+      // Update all states at once
+      setJsonInput(jsonString);
+      setMessage(parsedInput.message || '');
+      setSignature(typeof parsedInput.signature === 'string' ? parsedInput.signature : JSON.stringify(parsedInput.signature));
+      setAddress(parsedInput.address || '');
+      setSelectedNetwork(parsedInput.network as NetworkType);
 
       // For Cosmos networks, try to determine the chain ID from the address prefix
-      if (parsedJson.network === 'cosmos' && parsedJson.address) {
-        const prefix = parsedJson.address.split('1')[0];
-        // Find the chain ID that matches this prefix
+      if (parsedInput.network === 'cosmos' && parsedInput.address) {
+        const prefix = parsedInput.address.split('1')[0];
         const chainEntry = Object.entries(CHAINS).find(([_, config]) => 
           config.bech32Prefix === prefix
         );
@@ -86,23 +70,90 @@ export default function VerifyPage() {
         }
       }
 
-      // Update message, signature, and address from the JSON
-      if (parsedJson.message) {
-        setMessage(parsedJson.message);
+      // Verify if we have all required fields
+      if (parsedInput.message && parsedInput.signature && parsedInput.address && parsedInput.network) {
+        console.log('All fields present, triggering verification');
+        // Use the parsed input directly instead of relying on state
+        await handleVerify({
+          message: parsedInput.message,
+          signature: parsedInput.signature,
+          address: parsedInput.address,
+          network: parsedInput.network as NetworkType,
+          chainId: parsedInput.chainId
+        });
+      } else {
+        console.log('Missing required fields');
+        setError('Missing required fields in the JSON input');
       }
-      if (parsedJson.signature) {
-        setSignature(typeof parsedJson.signature === 'string' ? parsedJson.signature : JSON.stringify(parsedJson.signature));
-      }
-      if (parsedJson.address) {
-        setAddress(parsedJson.address);
+    } catch (error) {
+      console.error('Error in processJsonAndVerify:', error);
+      setError('Failed to process input: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };
+
+  const handleFileUpload = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      console.log('File selected:', file.name);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        console.log('File read complete');
+        const content = e.target?.result as string;
+        await processJsonAndVerify(content);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleJsonInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const input = e.target.value;
+    setJsonInput(input);
+    clearPreviousResults();
+
+    try {
+      const parsedInput = VerificationService.parseJsonInput(input);
+      if (parsedInput) {
+        // Update all states at once
+        setMessage(parsedInput.message || '');
+        setSignature(typeof parsedInput.signature === 'string' ? parsedInput.signature : JSON.stringify(parsedInput.signature));
+        setAddress(parsedInput.address || '');
+        setSelectedNetwork(parsedInput.network as NetworkType);
+
+        // For Cosmos networks, try to determine the chain ID from the address prefix
+        if (parsedInput.network === 'cosmos' && parsedInput.address) {
+          const prefix = parsedInput.address.split('1')[0];
+          const chainEntry = Object.entries(CHAINS).find(([_, config]) => 
+            config.bech32Prefix === prefix
+          );
+          if (chainEntry) {
+            setSelectedChainId(chainEntry[0] as CosmosChainId);
+          }
+        }
       }
     } catch (e) {
       // Ignore JSON parsing errors as the user might be in the middle of typing
     }
   };
 
-  const handleVerify = async () => {
-    if (!message || !signature || !address || !selectedNetwork) {
+  const handleVerify = async (overrideInput?: {
+    message: string;
+    signature: string;
+    address: string;
+    network: NetworkType;
+    chainId?: string;
+  }) => {
+    const verificationInput = overrideInput || {
+      message,
+      signature,
+      address,
+      network: selectedNetwork,
+      chainId: selectedChainId
+    };
+
+    console.log('Starting verification with:', verificationInput);
+    
+    if (!verificationInput.message || !verificationInput.signature || !verificationInput.address || !verificationInput.network) {
       setError('Please fill in all fields');
       return;
     }
@@ -114,236 +165,32 @@ export default function VerifyPage() {
       setVerificationMessage('');
       setVerificationDetails(null);
 
-      if (selectedNetwork === 'cosmos') {
-        try {
-          // Use the new parseSignature function
-          const signatureData = parseSignature(signature);
-          
-          if (!signatureData.signature || !signatureData.pub_key || !signatureData.sign_doc) {
-            throw new Error('Invalid signature format: missing required fields');
-          }
+      console.log('Calling VerificationService.verify');
+      const result = await VerificationService.verify(verificationInput);
+      console.log('Verification result:', result);
 
-          const isValid = await verifySignature(signatureData, address);
-          setVerificationResult(isValid);
-          
-          // Extract chain prefix from address
-          const prefix = address.split('1')[0];
-          const chainConfig = CHAINS[selectedChainId];
-          const isCorrectPrefix = chainConfig?.bech32Prefix === prefix;
-          
-          const checks = [
-            {
-              name: 'Signature Format',
-              passed: true,
-              details: 'Signature contains all required fields'
-            },
-            {
-              name: 'Public Key Format',
-              passed: true,
-              details: signatureData.pub_key.value.length === 33 ? 'Compressed format' : 'Uncompressed format'
-            },
-            {
-              name: 'Chain Compatibility',
-              passed: isCorrectPrefix,
-              details: isCorrectPrefix 
-                ? `Address prefix (${prefix}) matches selected chain (${chainConfig?.chainName})`
-                : `Address prefix (${prefix}) does not match selected chain (${chainConfig?.chainName})`
-            },
-            {
-              name: 'Signature Verification',
-              passed: isValid,
-              details: isValid ? 'Signature matches the message and public key' : 'Signature does not match'
-            },
-            {
-              name: 'Address Verification',
-              passed: isValid,
-              details: isValid ? 'Address matches the public key' : 'Address does not match the public key'
-            }
-          ];
+      setVerificationResult(result.isValid);
+      setVerificationMessage(result.message);
+      setVerificationDetails(result.details);
+      console.log('Updated verification states');
 
-          setVerificationDetails({
-            checks,
-            network: 'Cosmos',
-            chain: selectedChainId
-          });
-          
-          if (isValid) {
-            setVerificationMessage('Message verification successful!');
-          } else {
-            setVerificationMessage('Message verification failed');
-          }
-        } catch (e) {
-          console.error('Verification error:', e);
-          setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
-          setVerificationResult(false);
-          setVerificationMessage('Verification failed');
-          setVerificationDetails({
-            checks: [{
-              name: 'Error',
-              passed: false,
-              details: e instanceof Error ? e.message : 'Unknown error'
-            }],
-            network: 'Cosmos',
-            chain: selectedChainId
-          });
-        }
-      } else if (selectedNetwork === 'polkadot') {
-        try {
-          console.log('Starting Polkadot verification:', { message, signature, address });
-          let signedMessage: SubstrateSignedMessage;
-          
-          // Use the new parseSignature function
-          const parsedSignature = parseSignature(signature);
-          const parsedSignatureStr = parsedSignature.signature;
-
-          // Ensure the signature is a hex string
-          const parsedSignatureHex = parsedSignatureStr.startsWith('0x') ? parsedSignatureStr : '0x' + parsedSignatureStr;
-
-          // Use the chain utilities to determine the correct chain
-          const chain = determineChain(parsedSignatureHex, address, selectedChainId);
-          if (!chain) {
-            throw new Error('Could not determine chain');
-          }
-
-          signedMessage = {
-            message,
-            signature: parsedSignatureHex,
-            address,
-            network: 'polkadot',
-            chain: chain.name,
-            timestamp: new Date().toISOString()
-          };
-
-          console.log('Verifying Polkadot message:', signedMessage);
-
-          const isValid = await verifySubstrateMessage(signedMessage, chain);
-          console.log('Polkadot verification result:', isValid);
-          
-          setVerificationResult(isValid);
-          
-          const checks = [
-            {
-              name: 'Signature Format',
-              passed: true,
-              details: 'Valid hex-encoded signature'
-            },
-            {
-              name: 'Address Format',
-              passed: true,
-              details: chain.description
-            },
-            {
-              name: 'Signature Verification',
-              passed: isValid,
-              details: isValid ? 'Signature matches the message and public key' : 'Signature does not match'
-            },
-            {
-              name: 'Address Verification',
-              passed: isValid,
-              details: isValid ? 'Address matches the public key' : 'Address does not match the public key'
-            }
-          ];
-
-          setVerificationDetails({
-            checks,
-            network: 'Polkadot',
-            chain: chain.displayName
-          });
-          
-          if (isValid) {
-            setVerificationMessage('Message verification successful!');
-          } else {
-            setVerificationMessage('Message verification failed');
-          }
-        } catch (e) {
-          console.error('Polkadot verification error:', e);
-          setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
-          setVerificationResult(false);
-          setVerificationMessage('Verification failed');
-          setVerificationDetails({
-            checks: [{
-              name: 'Error',
-              passed: false,
-              details: e instanceof Error ? e.message : 'Unknown error'
-            }],
-            network: 'Polkadot'
-          });
-        }
-      } else if (selectedNetwork === 'ethereum') {
-        try {
-          console.log('Verifying EVM message:', {
-            message,
-            signature,
-            address,
-            messageLength: message.length,
-            signatureLength: signature.length
-          });
-          
-          const recoveredAddress = await verifyMessage(message, signature);
-          console.log('Recovered address:', recoveredAddress);
-          
-          const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();
-          console.log('Verification result:', {
-            isValid,
-            recoveredAddress,
-            expectedAddress: address
-          });
-          
-          const checks = [
-            {
-              name: 'Signature Format',
-              passed: true,
-              details: 'Valid ECDSA signature'
-            },
-            {
-              name: 'Address Format',
-              passed: true,
-              details: 'Valid Ethereum address format'
-            },
-            {
-              name: 'Signature Verification',
-              passed: isValid,
-              details: isValid ? 'Signature matches the message and public key' : 'Signature does not match'
-            },
-            {
-              name: 'Address Recovery',
-              passed: isValid,
-              details: isValid 
-                ? `Recovered address (${recoveredAddress}) matches the expected address (${address})`
-                : `Recovered address (${recoveredAddress}) does not match the expected address (${address})`
-            }
-          ];
-
-          setVerificationDetails({
-            checks,
-            network: 'Ethereum'
-          });
-          
-          setVerificationResult(isValid);
-          if (isValid) {
-            setVerificationMessage('Message verification successful!');
-          } else {
-            setVerificationMessage('Message verification failed: Recovered address does not match the expected address');
-          }
-        } catch (e) {
-          console.error('Verification error:', e);
-          setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
-          setVerificationResult(false);
-          setVerificationMessage('Verification failed');
-          setVerificationDetails({
-            checks: [{
-              name: 'Error',
-              passed: false,
-              details: e instanceof Error ? e.message : 'Unknown error'
-            }],
-            network: 'Ethereum'
-          });
-        }
-      } else {
-        setError('Network not supported');
-      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      setError(`Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setVerificationResult(false);
+      setVerificationMessage('Verification failed');
+      setVerificationDetails({
+        checks: [{
+          name: 'Error',
+          passed: false,
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }],
+        network: verificationInput.network,
+        chain: verificationInput.chainId
+      });
     } finally {
       setIsLoading(false);
+      console.log('Scrolling to results');
       // Scroll to result after a short delay to ensure the component has rendered
       setTimeout(() => {
         const resultElement = document.getElementById('verification-result');
@@ -389,7 +236,7 @@ export default function VerifyPage() {
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
             <option value="cosmos">Cosmos</option>
-            <option value="polkadot">Polkadot</option>
+            <option value="polkadot">Polkadot/Substrate</option>
           </select>
         </div>
 
@@ -445,20 +292,7 @@ export default function VerifyPage() {
                 onClick={async () => {
                   try {
                     const text = await navigator.clipboard.readText();
-                    // Validate JSON first
-                    try {
-                      JSON.parse(text); // This will throw if invalid JSON
-                      setJsonInput(text);
-                      await handleJsonInputChange({ target: { value: text } } as React.ChangeEvent<HTMLTextAreaElement>);
-                      // Small delay to ensure state updates are complete
-                      await new Promise(resolve => setTimeout(resolve, 100));
-                      // Now verify if we have all required fields
-                      if (message && signature && address && selectedNetwork) {
-                        await handleVerify();
-                      }
-                    } catch (jsonError) {
-                      setError('Invalid JSON format in clipboard');
-                    }
+                    await processJsonAndVerify(text);
                   } catch (err) {
                     console.error('Failed to paste:', err);
                     setError('Failed to read from clipboard');
@@ -532,7 +366,7 @@ export default function VerifyPage() {
 
         <div className="flex justify-end mb-6">
           <Button
-            onClick={handleVerify}
+            onClick={() => handleVerify()}
             disabled={!message || !signature || !address || !selectedNetwork || isLoading}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
           >
@@ -578,7 +412,7 @@ export default function VerifyPage() {
                           <XCircle className="text-red-500" />
                         )}
                         <span className="text-gray-900">{check.name}</span>
-                        {check.details && <span className="text-gray-700">({check.details})</span>}
+                        {check.details && <span className="text-gray-700">{check.details}</span>}
                       </div>
                     ))}
                   </div>
