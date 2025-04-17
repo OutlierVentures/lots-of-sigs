@@ -55,9 +55,12 @@ export async function verifyMessage(
     // Convert the signature from hex to Uint8Array
     const signature = hexToU8a(signedMessage.signature as string);
     
+    // Format the message as it was signed
+    const wrappedMessage = `<Bytes>${signedMessage.message}</Bytes>`;
+    
     // Verify the signature
     const { isValid } = signatureVerify(
-      signedMessage.message,
+      wrappedMessage,
       signature,
       publicKey
     );

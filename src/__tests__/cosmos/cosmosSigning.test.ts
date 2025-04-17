@@ -316,8 +316,16 @@ describe('Cosmos Signing and Verification', () => {
       },
     };
 
+    // Mock console.error to prevent it from failing the test
+    const originalConsoleError = console.error;
+    console.error = jest.fn();
+
     // Verify the signature should fail
     const isValid = await verifySignature(invalidSignatureData, address);
     expect(isValid).toBe(false);
+    expect(console.error).toHaveBeenCalledWith('Invalid public key length:', 30);
+
+    // Restore console.error
+    console.error = originalConsoleError;
   });
 }); 

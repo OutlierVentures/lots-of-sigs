@@ -9,6 +9,7 @@ import { CHAINS } from '../../lib/cosmos/chains';
 import { SUBSTRATE_CHAINS, getAllChains } from '../../lib/substrate/chains';
 import { Copy, Download, PenLine, Wallet, LogOut } from 'lucide-react';
 import { isValidChainId, getDefaultChain } from '../../lib/substrate/chain-utils';
+import { parseSignature } from '@/lib/signature/format';
 
 export default function SignPage() {
   const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
@@ -54,13 +55,8 @@ export default function SignPage() {
       const sig = await actions.signMessage(message);
       setSignature(sig);
       
-      // Try to parse the signature as JSON, if it fails, use it as a raw signature
-      let parsedSig;
-      try {
-        parsedSig = JSON.parse(sig);
-      } catch (e) {
-        parsedSig = { signature: sig };
-      }
+      // Use the new parseSignature function
+      const parsedSig = parseSignature(sig);
       
       // Generate JSON representation
       const signedMessageObj: SignedMessage = {

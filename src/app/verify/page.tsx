@@ -17,6 +17,7 @@ import { SUBSTRATE_CHAINS, getChainByAddress, getChainByName, SubstrateChain, DE
 import { verifyMessage as verifySubstrateMessage, SignedMessage as SubstrateSignedMessage } from '../../lib/substrate/signing';
 import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { determineChain } from '../../lib/substrate/chain-utils';
+import { parseSignature } from '@/lib/signature/format';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
@@ -115,12 +116,8 @@ export default function VerifyPage() {
 
       if (selectedNetwork === 'cosmos') {
         try {
-          let signatureData;
-          if (typeof signature === 'string') {
-            signatureData = JSON.parse(signature);
-          } else {
-            signatureData = signature;
-          }
+          // Use the new parseSignature function
+          const signatureData = parseSignature(signature);
           
           if (!signatureData.signature || !signatureData.pub_key || !signatureData.sign_doc) {
             throw new Error('Invalid signature format: missing required fields');
@@ -194,34 +191,23 @@ export default function VerifyPage() {
         try {
           console.log('Starting Polkadot verification:', { message, signature, address });
           let signedMessage: SubstrateSignedMessage;
-          let parsedSignature: string;
-
-          try {
-            console.log('Parsing signature as JSON:', signature);
-            const parsed = JSON.parse(signature);
-            console.log('Parsed signature:', parsed);
-            // If the signature is in a JSON object, use the signature field
-            parsedSignature = parsed.signature || signature;
-          } catch (e) {
-            // If parsing fails, use the raw signature
-            console.log('Using raw signature format');
-            parsedSignature = signature;
-          }
+          
+          // Use the new parseSignature function
+          const parsedSignature = parseSignature(signature);
+          const parsedSignatureStr = parsedSignature.signature;
 
           // Ensure the signature is a hex string
-          if (!parsedSignature.startsWith('0x')) {
-            parsedSignature = '0x' + parsedSignature;
-          }
+          const parsedSignatureHex = parsedSignatureStr.startsWith('0x') ? parsedSignatureStr : '0x' + parsedSignatureStr;
 
           // Use the chain utilities to determine the correct chain
-          const chain = determineChain(signature, address, selectedChainId);
+          const chain = determineChain(parsedSignatureHex, address, selectedChainId);
           if (!chain) {
             throw new Error('Could not determine chain');
           }
 
           signedMessage = {
             message,
-            signature: parsedSignature,
+            signature: parsedSignatureHex,
             address,
             network: 'polkadot',
             chain: chain.name,
