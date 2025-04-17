@@ -19,6 +19,10 @@ RUN pnpm add -D pino-pretty eslint-plugin-react-hooks @next/eslint-plugin-next
 # Copy source code
 COPY . .
 
+# Set build arguments for environment variables
+ARG NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+
 # Build the application
 RUN pnpm build
 
@@ -42,6 +46,7 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Set environment variables
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 
 # Expose the port
 EXPOSE ${PORT:-3000}

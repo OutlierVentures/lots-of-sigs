@@ -96,9 +96,9 @@ The application can be deployed using Docker for production environments.
 
 ### Building the Docker Image
 
-1. Build the Docker image:
+1. Build the Docker image with the required build arguments:
 ```bash
-docker build -t lots-of-sigs .
+docker build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id -t lots-of-sigs .
 ```
 
 ### Running the Container
@@ -119,16 +119,25 @@ The application will be available at:
 
 ### Environment Variables
 
-You can configure the application using environment variables:
+There are two types of environment variables in Next.js applications:
 
-- `PORT`: The port number the application will listen on inside the container (default: 3000)
-- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: Your WalletConnect project ID
+1. **Build-time Variables** (prefixed with `NEXT_PUBLIC_`):
+   - These must be provided during the Docker build process using `--build-arg`
+   - They are embedded into the client-side JavaScript during build
+   - Example: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
 
-Example with environment variables:
+2. **Runtime Variables**:
+   - These can be provided when running the container using `-e`
+   - They are available to the server-side code
+   - Example: `PORT`
+
+Example with both types of variables:
 ```bash
-docker run -p 8080:3000 \
-  -e NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id \
-  lots-of-sigs
+# Build the image with build-time variables
+docker build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id -t lots-of-sigs .
+
+# Run the container with runtime variables
+docker run -p 8080:3000 -e PORT=3000 lots-of-sigs
 ```
 
 Note: The first port number in the `-p` flag is the host port, and the second is the container port. For example, `-p 8080:3000` means the application running on port 3000 inside the container will be accessible on port 8080 on your host machine.
