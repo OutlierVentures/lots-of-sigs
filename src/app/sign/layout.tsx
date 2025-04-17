@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign | Lots Of Sigs',
+  title: 'Sign'
 };
 
 export default function SignLayout({

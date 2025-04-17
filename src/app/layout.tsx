@@ -12,6 +12,9 @@ export const metadata: Metadata = {
     template: "%s | Lots Of Sigs"
   },
   description: "Sign and verify messages using blockchain wallets",
+  icons: {
+    icon: '/signature.svg',
+  },
 };
 
 export default function RootLayout({

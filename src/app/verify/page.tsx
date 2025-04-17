@@ -39,16 +39,23 @@ export default function VerifyPage() {
     const file = input.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const content = e.target?.result as string;
         setJsonInput(content);
-        handleJsonInputChange({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>);
+        // Process the JSON and wait for state updates
+        await handleJsonInputChange({ target: { value: content } } as React.ChangeEvent<HTMLTextAreaElement>);
+        // Small delay to ensure state updates are complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Now verify if we have all required fields
+        if (message && signature && address && selectedNetwork) {
+          await handleVerify();
+        }
       };
       reader.readAsText(file);
     }
   };
 
-  const handleJsonInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleJsonInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const input = e.target.value;
     setJsonInput(input);
     setError(null);
@@ -183,33 +190,46 @@ export default function VerifyPage() {
         }
       } else if (selectedNetwork === 'polkadot') {
         try {
+          console.log('Starting Polkadot verification:', { message, signature, address });
           let signedMessage: SubstrateSignedMessage;
+          let parsedSignature: string;
+
           try {
-            const parsed = JSON.parse(signature) as SignedMessage;
-            signedMessage = {
-              message: parsed.message,
-              signature: typeof parsed.signature === 'string' ? parsed.signature : JSON.stringify(parsed.signature),
-              address,
-              network: 'polkadot',
-              chain: parsed.chain || 'polkadot',
-              timestamp: parsed.timestamp || new Date().toISOString()
-            };
+            console.log('Parsing signature as JSON:', signature);
+            const parsed = JSON.parse(signature);
+            console.log('Parsed signature:', parsed);
+            // If the signature is in a JSON object, use the signature field
+            parsedSignature = parsed.signature || signature;
           } catch (e) {
-            signedMessage = {
-              message,
-              signature,
-              address,
-              network: 'polkadot',
-              chain: 'polkadot',
-              timestamp: new Date().toISOString()
-            };
+            // If parsing fails, use the raw signature
+            console.log('Using raw signature format');
+            parsedSignature = signature;
           }
+
+          // Ensure the signature is a hex string
+          if (!parsedSignature.startsWith('0x')) {
+            parsedSignature = '0x' + parsedSignature;
+          }
+
+          signedMessage = {
+            message,
+            signature: parsedSignature,
+            address,
+            network: 'polkadot',
+            chain: 'polkadot',
+            timestamp: new Date().toISOString()
+          };
+
+          console.log('Verifying Polkadot message:', signedMessage);
 
           const isValid = await verifySubstrateMessage(signedMessage, {
             name: 'polkadot',
             rpcUrl: '',
             ss58Format: 0
           });
+          console.log('Polkadot verification result:', isValid);
+          
+          setVerificationResult(isValid);
           
           // Extract SS58 format from address
           const ss58Format = parseInt(address.substring(0, 2), 16);
@@ -249,7 +269,7 @@ export default function VerifyPage() {
             setVerificationMessage('Message verification failed');
           }
         } catch (e) {
-          console.error('Verification error:', e);
+          console.error('Polkadot verification error:', e);
           setError(`Verification failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
           setVerificationResult(false);
           setVerificationMessage('Verification failed');
@@ -337,6 +357,13 @@ export default function VerifyPage() {
       }
     } finally {
       setIsLoading(false);
+      // Scroll to result after a short delay to ensure the component has rendered
+      setTimeout(() => {
+        const resultElement = document.getElementById('verification-result');
+        if (resultElement) {
+          resultElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
   };
 
@@ -385,6 +412,38 @@ export default function VerifyPage() {
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-900">Signed Message JSON</label>
             <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    // Validate JSON first
+                    try {
+                      JSON.parse(text); // This will throw if invalid JSON
+                      setJsonInput(text);
+                      await handleJsonInputChange({ target: { value: text } } as React.ChangeEvent<HTMLTextAreaElement>);
+                      // Small delay to ensure state updates are complete
+                      await new Promise(resolve => setTimeout(resolve, 100));
+                      // Now verify if we have all required fields
+                      if (message && signature && address && selectedNetwork) {
+                        await handleVerify();
+                      }
+                    } catch (jsonError) {
+                      setError('Invalid JSON format in clipboard');
+                    }
+                  } catch (err) {
+                    console.error('Failed to paste:', err);
+                    setError('Failed to read from clipboard');
+                  }
+                }}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Paste
+              </Button>
               <Button
                 variant="default"
                 size="sm"
@@ -444,8 +503,23 @@ export default function VerifyPage() {
           />
         </div>
 
+        <div className="flex justify-end mb-6">
+          <Button
+            onClick={handleVerify}
+            disabled={!message || !signature || !address || !selectedNetwork || isLoading}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            {isLoading ? 'Verifying...' : (
+              <>
+                <Search className="h-4 w-4" />
+                Verify Message
+              </>
+            )}
+          </Button>
+        </div>
+
         {verificationResult !== null && (
-          <div className="space-y-4">
+          <div id="verification-result" className="space-y-6">
             <div className={`p-4 rounded-md border ${
               verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
             }`}>
@@ -504,21 +578,6 @@ export default function VerifyPage() {
             )}
           </div>
         )}
-
-        <div className="flex justify-end">
-          <Button
-            onClick={handleVerify}
-            disabled={!message || !signature || !address || !selectedNetwork || isLoading}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-            {isLoading ? 'Verifying...' : (
-              <>
-                <Search className="h-4 w-4" />
-                Verify Message
-              </>
-            )}
-          </Button>
-        </div>
       </div>
     </div>
   );

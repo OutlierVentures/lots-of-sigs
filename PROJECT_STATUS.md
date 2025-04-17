@@ -34,6 +34,7 @@
 - [x] Improved verification result display
 - [x] Test WalletConnect end to end with a Safe{Wallet}
 - [x] Download/upload for signatures
+- [ ] Robust support for different Polkadot address types per network
 
 ## Current Focus
 - Project completion and final review

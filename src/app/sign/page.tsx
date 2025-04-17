@@ -217,9 +217,13 @@ export default function SignPage() {
           </button>
         ) : (
           <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-900">Connected Address:</p>
-              <p className="text-sm font-mono break-all text-gray-900">{address}</p>
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-900">Connected Address</label>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                <p className="text-sm font-mono break-all text-gray-900">{address}</p>
+              </div>
             </div>
 
             <div>

@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Verify | Lots Of Sigs',
+  title: 'Verify'
 };
 
 export default function VerifyLayout({

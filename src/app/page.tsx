@@ -4,7 +4,7 @@ import { Button } from './components/ui/Button';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Home'
+  title: 'Lots Of Sigs'
 };
 
 export default function Home() {
