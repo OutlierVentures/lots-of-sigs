@@ -42,10 +42,9 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
 
 # Expose the port
-EXPOSE ${PORT}
+EXPOSE ${PORT:-3000}
 
 # Start the application
 CMD ["pnpm", "start"] 

@@ -101,14 +101,14 @@ docker build -t lots-of-sigs .
 
 ### Running the Container
 
-1. Run the container with default port (3000):
+1. Run the container with default port mapping (container:3000 → host:3000):
 ```bash
 docker run -p 3000:3000 lots-of-sigs
 ```
 
-2. Run the container with a custom port:
+2. Run the container with custom port mapping (container:3000 → host:8080):
 ```bash
-docker run -p 8080:3000 -e PORT=3000 lots-of-sigs
+docker run -p 8080:3000 lots-of-sigs
 ```
 
 The application will be available at:
@@ -119,16 +119,17 @@ The application will be available at:
 
 You can configure the application using environment variables:
 
-- `PORT`: The port number the application will listen on (default: 3000)
+- `PORT`: The port number the application will listen on inside the container (default: 3000)
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: Your WalletConnect project ID
 
 Example with environment variables:
 ```bash
-docker run -p 3000:3000 \
-  -e PORT=3000 \
+docker run -p 8080:3000 \
   -e NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id \
   lots-of-sigs
 ```
+
+Note: The first port number in the `-p` flag is the host port, and the second is the container port. For example, `-p 8080:3000` means the application running on port 3000 inside the container will be accessible on port 8080 on your host machine.
 
 ## Usage
 
