@@ -13,7 +13,7 @@ export default function SignPage() {
   const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
   const [message, setMessage] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
-  const [selectedChainId, setSelectedChainId] = useState<string>('cosmoshub-4');
+  const [selectedChainId, setSelectedChainId] = useState<string>(SUBSTRATE_CHAINS[0].name);
   const [signature, setSignature] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -153,11 +153,16 @@ export default function SignPage() {
             value={selectedNetwork}
             onChange={(e) => {
               setSelectedNetwork(e.target.value as NetworkType);
-              // Reset wallet type when network changes
+              // Reset wallet type and chain ID when network changes
               setWalletType(
                 e.target.value === 'ethereum' ? 'metamask' :
                 e.target.value === 'cosmos' ? 'keplr' :
                 'polkadot-js'
+              );
+              setSelectedChainId(
+                e.target.value === 'cosmos' ? 'cosmoshub-4' :
+                e.target.value === 'polkadot' ? SUBSTRATE_CHAINS[0].name :
+                ''
               );
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"

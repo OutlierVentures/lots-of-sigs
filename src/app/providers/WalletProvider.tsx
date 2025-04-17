@@ -111,9 +111,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setSubstrateWallet(wallet);
         
         // Get the chain configuration
-        const chain = SUBSTRATE_CHAINS.find(c => c.name.toLowerCase() === chainId?.toLowerCase());
+        const chain = SUBSTRATE_CHAINS.find(c => 
+          c.name.toLowerCase() === (chainId || '').toLowerCase()
+        );
         if (!chain) {
-          throw new Error('Invalid chain selected');
+          throw new Error(`Invalid chain selected. Available chains: ${SUBSTRATE_CHAINS.map(c => c.name).join(', ')}`);
         }
 
         // Connect to the chain
