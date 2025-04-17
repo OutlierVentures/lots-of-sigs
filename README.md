@@ -248,17 +248,29 @@ Cosmos supports two public key formats:
 1. **Compressed** (33 bytes):
    - Starts with `0x02` or `0x03`
    - More efficient for storage and transmission
-   - Used by default in most wallets (including Keplr)
 
-2. **Uncompressed** (65 bytes):
-   - Starts with `0x04`
-   - Contains both x and y coordinates
-   - Used in some legacy systems
+## Independent Verification
 
-The verification process automatically handles both formats by:
-- Detecting the format based on length and first byte
-- Uncompressing compressed keys when needed
-- Using the appropriate format for verification
+You can independently verify signatures using the following tools:
+
+### Polkadot Signatures
+- Use [Polkadot.js Apps](https://polkadot.js.org/apps/#/signing/verify)
+- Enter the address, message, and signature
+- The tool will verify if the signature is valid
+
+### EVM Signatures
+- Use [Etherscan's Verified Signatures](https://etherscan.io/verifiedSignatures#)
+- Enter the address, message, and signature
+- The tool will verify if the signature is valid
+
+### Cosmos Signatures
+- Currently, there is no known public web resource for independent verification
+- Refer to the [ADR-36 specification](https://docs.cosmos.network/main/build/architecture/adr-036-arbitrary-signature)
+- These libraries might be used for independent verification:
+  - `@cosmjs/crypto` for cryptographic operations (Secp256k1, sha256, ripemd160)
+  - `@cosmjs/encoding` for encoding/decoding (fromBase64, toBech32, toBase64)
+  - `@cosmjs/amino` for Amino encoding
+  - `@cosmjs/stargate` for Cosmos SDK integration
 
 #### Message Formatting
 

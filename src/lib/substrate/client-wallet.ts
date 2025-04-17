@@ -1,6 +1,5 @@
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import type { SubstrateChain } from './chains';
-import { ApiPromise, WsProvider } from '@polkadot/api';
 
 interface InjectedAccountWithSigner extends InjectedAccountWithMeta {
   signer: {
@@ -9,7 +8,6 @@ interface InjectedAccountWithSigner extends InjectedAccountWithMeta {
 }
 
 export class SubstrateWallet {
-  private api: ApiPromise | null = null;
   private accounts: InjectedAccountWithSigner[] = [];
   private selectedAccount: InjectedAccountWithSigner | null = null;
   private chain: SubstrateChain | null = null;
@@ -44,10 +42,6 @@ export class SubstrateWallet {
       this.accounts = accounts as InjectedAccountWithSigner[];
       this.chain = chain;
       this.selectedAccount = this.accounts[0]; // Select first account by default
-
-      // Initialize the API
-      const provider = new WsProvider(chain.rpcEndpoint);
-      this.api = await ApiPromise.create({ provider });
     } catch (error) {
       this.disconnect();
       throw error;
@@ -55,17 +49,13 @@ export class SubstrateWallet {
   }
 
   disconnect(): void {
-    if (this.api) {
-      this.api.disconnect();
-      this.api = null;
-    }
     this.accounts = [];
     this.selectedAccount = null;
     this.chain = null;
   }
 
   isConnected(): boolean {
-    return this.api !== null && this.selectedAccount !== null;
+    return this.selectedAccount !== null;
   }
 
   getAccounts(): InjectedAccountWithSigner[] {
@@ -82,10 +72,6 @@ export class SubstrateWallet {
 
   getChain(): SubstrateChain | null {
     return this.chain;
-  }
-
-  getApi(): ApiPromise | null {
-    return this.api;
   }
 
   async signMessage(message: string, address: string, chain: SubstrateChain): Promise<string> {

@@ -17,13 +17,7 @@ Object.defineProperty(window, 'injectedWeb3', {
   writable: true
 });
 
-// Mock ApiPromise
-const mockApi = {
-  isConnected: true,
-  disconnect: jest.fn()
-};
-
-// Mock web3Enable and ApiPromise
+// Mock web3Enable
 jest.mock('@polkadot/extension-dapp', () => ({
   web3Enable: jest.fn().mockResolvedValue([mockExtension]),
   web3Accounts: jest.fn().mockResolvedValue([
@@ -35,27 +29,6 @@ jest.mock('@polkadot/extension-dapp', () => ({
       }
     }
   ])
-}));
-
-jest.mock('@polkadot/api', () => ({
-  ApiPromise: {
-    create: jest.fn().mockResolvedValue(mockApi)
-  },
-  WsProvider: jest.fn()
-}));
-
-jest.mock('@polkadot/util-crypto', () => ({
-  cryptoWaitReady: jest.fn().mockResolvedValue(true),
-  signatureVerify: jest.fn().mockReturnValue({ isValid: true })
-}));
-
-jest.mock('@polkadot/keyring', () => ({
-  Keyring: jest.fn().mockImplementation(() => ({
-    decodeAddress: jest.fn().mockReturnValue(new Uint8Array(32)),
-    addFromAddress: jest.fn().mockReturnValue({
-      verify: jest.fn().mockReturnValue(true)
-    })
-  }))
 }));
 
 import { SubstrateWallet } from '../lib/substrate/client-wallet';
@@ -80,13 +53,6 @@ describe('Substrate Integration', () => {
       expect(Array.isArray(accounts)).toBe(true);
       expect(accounts.length).toBe(1);
       expect(accounts[0].address).toBe(testAddress);
-    });
-
-    it('should connect to network and get API', async () => {
-      await wallet.connect(testChain);
-      const api = wallet.getApi();
-      expect(api).toBeDefined();
-      expect(api?.isConnected).toBe(true);
     });
   });
 
