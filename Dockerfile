@@ -46,6 +46,9 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Set environment variables
 ENV NODE_ENV=production
+
+# Re-declare the build arg and set it as an environment variable
+ARG NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 
 # Expose the port
