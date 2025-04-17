@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
 import { SignedMessage } from '../types/message';
-import { createWalletConnectProvider } from '../config/walletConnect';
+import { createWalletConnectProvider, cleanupWalletConnectProvider } from '../config/walletConnect';
 import { NetworkType, WalletType, WalletContextType, WalletState, CosmosChainId } from '../types/wallet';
 import { createSignature, createSignDoc } from '../../lib/cosmos/signing';
 import { hash } from '../../lib/utils';
@@ -27,10 +27,30 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   
   const [state, setState] = useState<WalletState>(initialState);
   const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
-  const [walletConnectProvider, setWalletConnectProvider] = useState<any>(null);
+  const [walletConnectProvider, setWalletConnectProvider] = useState<WalletConnectProvider | null>(null);
   const [isWalletConnectInitialized, setIsWalletConnectInitialized] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [substrateWallet, setSubstrateWallet] = useState<SubstrateWallet | null>(null);
+
+  const handleChainChanged = useCallback((chainId: string | number) => {
+    console.log('WalletProvider: Chain changed', chainId);
+    setState(prev => ({ ...prev, chainId }));
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    console.log('WalletProvider: Handling disconnect');
+    setState(initialState);
+    setSigner(null);
+  }, []);
+
+  const handleAccountsChanged = useCallback((accounts: string[]) => {
+    console.log('WalletProvider: Accounts changed', accounts);
+    if (!accounts || accounts.length === 0) {
+      handleDisconnect();
+    } else {
+      setState(prev => ({ ...prev, address: accounts[0] }));
+    }
+  }, [handleDisconnect]);
 
   useEffect(() => {
     console.log('WalletProvider: useEffect triggered');
@@ -38,6 +58,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     const initWalletConnect = async () => {
       try {
+        // Skip initialization if already initialized
+        if (isWalletConnectInitialized || walletConnectProvider) {
+          console.log('WalletProvider: WalletConnect already initialized, skipping');
+          return;
+        }
+
         console.log('WalletProvider: Creating WalletConnect provider');
         const provider = await createWalletConnectProvider();
         console.log('WalletProvider: WalletConnect provider created', provider);
@@ -74,28 +100,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         walletConnectProvider.removeListener('chainChanged', handleChainChanged);
         walletConnectProvider.removeListener('disconnect', handleDisconnect);
       }
+      // Clean up the provider using our new cleanup function
+      cleanupWalletConnectProvider();
     };
-  }, []);
-
-  const handleAccountsChanged = (accounts: string[]) => {
-    console.log('WalletProvider: Accounts changed', accounts);
-    if (accounts.length === 0) {
-      handleDisconnect();
-    } else {
-      setState(prev => ({ ...prev, address: accounts[0] }));
-    }
-  };
-
-  const handleChainChanged = (chainId: string | number) => {
-    console.log('WalletProvider: Chain changed', chainId);
-    setState(prev => ({ ...prev, chainId }));
-  };
-
-  const handleDisconnect = () => {
-    console.log('WalletProvider: Handling disconnect');
-    setState(initialState);
-    setSigner(null);
-  };
+  }, [handleAccountsChanged, handleChainChanged, handleDisconnect, walletConnectProvider, isWalletConnectInitialized]);
 
   const connect = async (network: NetworkType, walletType: WalletType = 'metamask', chainId?: string) => {
     console.log('WalletProvider: Connecting wallet', { network, walletType, chainId });
@@ -196,7 +204,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           console.log('WalletProvider: Connecting to WalletConnect');
           await walletConnectProvider.connect();
           console.log('WalletProvider: Requesting accounts');
-          const accounts = await walletConnectProvider.request({ method: 'eth_accounts' });
+          const accounts = (await walletConnectProvider.request({ method: 'eth_accounts' })) as string[];
           console.log('WalletProvider: Got accounts', accounts);
           
           if (!accounts || accounts.length === 0) {
@@ -267,6 +275,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (state.network === 'ethereum' && walletConnectProvider) {
       console.log('WalletProvider: Disconnecting WalletConnect');
       await walletConnectProvider.disconnect();
+      await cleanupWalletConnectProvider();
     } else if (state.network === 'polkadot' && substrateWallet) {
       substrateWallet.disconnect();
       setSubstrateWallet(null);

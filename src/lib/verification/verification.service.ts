@@ -28,22 +28,22 @@ export class VerificationService {
     const { message, signature, address, network, chainId } = input;
     const checks: Array<{ name: string; passed: boolean; details?: string }> = [];
     let chainDisplayName: string | undefined;
-    let networkDisplayName = network;
+    let networkDisplayName = '';
     
     try {
       // Set network display name
       switch (network) {
         case 'ethereum':
-          networkDisplayName = 'Ethereum';
+          networkDisplayName = network;
           break;
         case 'cosmos':
-          networkDisplayName = 'Cosmos';
+          networkDisplayName = network;
           break;
         case 'polkadot':
-          networkDisplayName = 'Polkadot';
+          networkDisplayName = network;
           break;
         default:
-          networkDisplayName = network;
+          networkDisplayName = 'Unknown';
       }
       
       // 1. Message format check

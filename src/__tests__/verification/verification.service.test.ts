@@ -77,8 +77,8 @@ describe('VerificationService', () => {
 
     it('should handle verification errors', async () => {
       const mockError = new Error('Verification failed');
-      jest.spyOn(require('@/lib/ethereum/verify'), 'verifyMessage')
-        .mockRejectedValueOnce(mockError);
+      const { verifyMessage } = await import('@/lib/ethereum/verify');
+      (verifyMessage as jest.Mock).mockRejectedValueOnce(mockError);
 
       const result = await VerificationService.verify(mockInput);
       

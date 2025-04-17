@@ -84,10 +84,19 @@ describe('Substrate Integration', () => {
     });
 
     it('should throw error when no extension is found', async () => {
-      const mockWeb3Enable = require('@polkadot/extension-dapp').web3Enable;
-      mockWeb3Enable.mockResolvedValueOnce([]);
+      const { web3Enable } = await import('@polkadot/extension-dapp');
+      (web3Enable as jest.Mock).mockResolvedValueOnce([]);
       
       await expect(wallet.connect(testChain)).rejects.toThrow('No extension found');
+    });
+
+    it('should handle invalid address format', async () => {
+      const { decodeAddress } = await import('@polkadot/util-crypto');
+      (decodeAddress as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Invalid address format');
+      });
+      
+      await expect(wallet.connect(testChain)).rejects.toThrow('Invalid address format');
     });
   });
 
@@ -156,8 +165,8 @@ describe('Substrate Integration', () => {
         timestamp: new Date().toISOString()
       };
 
-      const { signatureVerify } = require('@polkadot/util-crypto');
-      signatureVerify.mockReturnValueOnce({ isValid: false });
+      const { signatureVerify } = await import('@polkadot/util-crypto');
+      (signatureVerify as jest.Mock).mockReturnValueOnce({ isValid: false });
 
       const isValid = await verifyMessage(signedMessage, testChain);
       expect(isValid).toBe(false);
