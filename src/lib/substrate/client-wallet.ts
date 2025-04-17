@@ -1,10 +1,17 @@
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import type { SubstrateChain } from './chains';
+import { ApiPromise, WsProvider } from '@polkadot/api';
+
+interface InjectedAccountWithSigner extends InjectedAccountWithMeta {
+  signer: {
+    signRaw: (data: { address: string; data: string; type: string }) => Promise<{ signature: string }>;
+  };
+}
 
 export class SubstrateWallet {
-  private api: any = null;
-  private accounts: InjectedAccountWithMeta[] = [];
-  private selectedAccount: InjectedAccountWithMeta | null = null;
+  private api: ApiPromise | null = null;
+  private accounts: InjectedAccountWithSigner[] = [];
+  private selectedAccount: InjectedAccountWithSigner | null = null;
   private chain: SubstrateChain | null = null;
 
   constructor() {
@@ -23,23 +30,24 @@ export class SubstrateWallet {
 
   async connect(chain: SubstrateChain): Promise<void> {
     try {
-      // Initialize the extension first
+      // Initialize the extension
       await this.init();
 
-      // Initialize API
-      const { ApiPromise, WsProvider } = await import('@polkadot/api');
-      const provider = new WsProvider(chain.rpcUrl);
-      this.api = await ApiPromise.create({ provider });
-      
-      // Get accounts
+      // Get accounts with the correct SS58 format
       const { web3Accounts } = await import('@polkadot/extension-dapp');
-      this.accounts = await web3Accounts();
-      if (this.accounts.length === 0) {
+      const accounts = await web3Accounts({ ss58Format: chain.ss58Format });
+      if (accounts.length === 0) {
         throw new Error('No accounts found');
       }
 
+      // Cast accounts to InjectedAccountWithSigner
+      this.accounts = accounts as InjectedAccountWithSigner[];
       this.chain = chain;
       this.selectedAccount = this.accounts[0]; // Select first account by default
+
+      // Initialize the API
+      const provider = new WsProvider(chain.rpcEndpoint);
+      this.api = await ApiPromise.create({ provider });
     } catch (error) {
       this.disconnect();
       throw error;
@@ -60,15 +68,15 @@ export class SubstrateWallet {
     return this.api !== null && this.selectedAccount !== null;
   }
 
-  getAccounts(): InjectedAccountWithMeta[] {
+  getAccounts(): InjectedAccountWithSigner[] {
     return this.accounts;
   }
 
-  getSelectedAccount(): InjectedAccountWithMeta | null {
+  getSelectedAccount(): InjectedAccountWithSigner | null {
     return this.selectedAccount;
   }
 
-  setSelectedAccount(account: InjectedAccountWithMeta): void {
+  setSelectedAccount(account: InjectedAccountWithSigner): void {
     this.selectedAccount = account;
   }
 
@@ -76,7 +84,7 @@ export class SubstrateWallet {
     return this.chain;
   }
 
-  getApi(): any {
+  getApi(): ApiPromise | null {
     return this.api;
   }
 

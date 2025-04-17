@@ -8,9 +8,10 @@ import { NetworkType, WalletType, WalletContextType, WalletState, CosmosChainId 
 import { createSignature, createSignDoc } from '../../lib/cosmos/signing';
 import { hash } from '../../lib/utils';
 import { SubstrateWallet } from '../../lib/substrate/client-wallet';
-import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
+import { getAllChains, getChainByName } from '../../lib/substrate/chains';
 import { CHAINS } from '../../lib/cosmos/chains';
 import WalletConnectProvider from '@walletconnect/ethereum-provider';
+import { isValidChainId } from '../../lib/substrate/chain-utils';
 
 const initialState: WalletState = {
   isConnected: false,
@@ -110,15 +111,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         const wallet = new SubstrateWallet();
         setSubstrateWallet(wallet);
         
-        // Get the chain configuration
-        const chain = SUBSTRATE_CHAINS.find(c => 
-          c.name.toLowerCase() === (chainId || '').toLowerCase()
-        );
-        if (!chain) {
-          throw new Error(`Invalid chain selected. Available chains: ${SUBSTRATE_CHAINS.map(c => c.name).join(', ')}`);
+        // Validate the chain ID
+        if (!isValidChainId(chainId || '')) {
+          throw new Error(`Invalid chain selected. Available chains: ${getAllChains().map(c => c.name).join(', ')}`);
         }
 
-        // Connect to the chain
+        // Get the chain configuration
+        const chain = getChainByName(chainId || '');
+        if (!chain) {
+          throw new Error('Could not determine chain');
+        }
+
+        // Connect to the chain with the correct SS58 format
         await wallet.connect(chain);
         
         // Get the selected account
@@ -284,7 +288,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         if (!substrateWallet) {
           throw new Error('Substrate wallet not initialized');
         }
-        const chain = SUBSTRATE_CHAINS.find(c => c.name.toLowerCase() === String(state.chainId).toLowerCase());
+        const chain = getAllChains().find(c => c.name.toLowerCase() === String(state.chainId).toLowerCase());
         if (!chain) {
           throw new Error('Invalid chain selected');
         }

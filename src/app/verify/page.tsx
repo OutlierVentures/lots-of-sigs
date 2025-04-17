@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -13,16 +13,17 @@ import { SignedMessage } from '../types/message';
 import { verifySignature, extractMessage } from '../../lib/cosmos/signing';
 import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
-import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
+import { SUBSTRATE_CHAINS, getChainByAddress, getChainByName, SubstrateChain, DEFAULT_CHAIN, getAllChains } from '@/lib/substrate/chains';
 import { verifyMessage as verifySubstrateMessage, SignedMessage as SubstrateSignedMessage } from '../../lib/substrate/signing';
 import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { determineChain } from '../../lib/substrate/chain-utils';
 
 export default function VerifyPage() {
   const [message, setMessage] = useState('');
   const [signature, setSignature] = useState<string>('');
   const [address, setAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
-  const [selectedChainId, setSelectedChainId] = useState<CosmosChainId>('cosmoshub-4');
+  const [selectedChainId, setSelectedChainId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(null);
@@ -33,6 +34,7 @@ export default function VerifyPage() {
     chain?: string;
   } | null>(null);
   const [jsonInput, setJsonInput] = useState('');
+  const [detectedChain, setDetectedChain] = useState<SubstrateChain | null>(null);
 
   const handleFileUpload = (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -211,29 +213,27 @@ export default function VerifyPage() {
             parsedSignature = '0x' + parsedSignature;
           }
 
+          // Use the chain utilities to determine the correct chain
+          const chain = determineChain(signature, address, selectedChainId);
+          if (!chain) {
+            throw new Error('Could not determine chain');
+          }
+
           signedMessage = {
             message,
             signature: parsedSignature,
             address,
             network: 'polkadot',
-            chain: 'polkadot',
+            chain: chain.name,
             timestamp: new Date().toISOString()
           };
 
           console.log('Verifying Polkadot message:', signedMessage);
 
-          const isValid = await verifySubstrateMessage(signedMessage, {
-            name: 'polkadot',
-            rpcUrl: '',
-            ss58Format: 0
-          });
+          const isValid = await verifySubstrateMessage(signedMessage, chain);
           console.log('Polkadot verification result:', isValid);
           
           setVerificationResult(isValid);
-          
-          // Extract SS58 format from address
-          const ss58Format = parseInt(address.substring(0, 2), 16);
-          const isCorrectFormat = ss58Format === 0; // Polkadot uses format 0
           
           const checks = [
             {
@@ -244,7 +244,7 @@ export default function VerifyPage() {
             {
               name: 'Address Format',
               passed: true,
-              details: `SS58 format: ${ss58Format} (${isCorrectFormat ? 'correct' : 'incorrect'})`
+              details: chain.description
             },
             {
               name: 'Signature Verification',
@@ -260,7 +260,8 @@ export default function VerifyPage() {
 
           setVerificationDetails({
             checks,
-            network: 'Polkadot'
+            network: 'Polkadot',
+            chain: chain.displayName
           });
           
           if (isValid) {
@@ -367,6 +368,17 @@ export default function VerifyPage() {
     }
   };
 
+  // Add effect to detect chain when address changes
+  useEffect(() => {
+    if (selectedNetwork === 'polkadot' && address) {
+      const chain = getChainByAddress(address);
+      setDetectedChain(chain);
+      if (chain) {
+        setSelectedChainId(chain.name);
+      }
+    }
+  }, [address, selectedNetwork]);
+
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
@@ -382,7 +394,11 @@ export default function VerifyPage() {
           <label className="block text-sm font-medium text-gray-900 mb-2">Network Type</label>
           <select
             value={selectedNetwork}
-            onChange={(e) => setSelectedNetwork(e.target.value as NetworkType)}
+            onChange={(e) => {
+              setSelectedNetwork(e.target.value as NetworkType);
+              setSelectedChainId('');
+              setDetectedChain(null);
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
@@ -405,6 +421,31 @@ export default function VerifyPage() {
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {selectedNetwork === 'polkadot' && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Chain
+            </label>
+            <select
+              value={selectedChainId}
+              onChange={(e) => setSelectedChainId(e.target.value)}
+              className="w-full p-2 border rounded text-gray-900"
+            >
+              <option value="">Select a chain</option>
+              {getAllChains().map((chain) => (
+                <option key={chain.name} value={chain.name}>
+                  {chain.displayName}
+                </option>
+              ))}
+            </select>
+            {detectedChain && (
+              <p className="mt-2 text-sm text-gray-900">
+                Detected chain: {detectedChain.displayName}
+              </p>
+            )}
           </div>
         )}
 
@@ -544,32 +585,14 @@ export default function VerifyPage() {
                   </div>
                   <div className="space-y-2">
                     {verificationDetails.checks.map((check, index) => (
-                      <div key={index} className="flex items-start">
-                        <div className={`flex-shrink-0 h-5 w-5 ${
-                          check.passed ? 'text-green-500' : 'text-red-500'
-                        }`}>
-                          {check.passed ? (
-                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="ml-3">
-                          <p className={`text-sm font-medium ${
-                            check.passed ? 'text-green-900' : 'text-red-900'
-                          }`}>
-                            {check.name}
-                          </p>
-                          {check.details && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              {check.details}
-                            </p>
-                          )}
-                        </div>
+                      <div key={index} className="flex items-center gap-2">
+                        {check.passed ? (
+                          <CheckCircle2 className="text-green-500" />
+                        ) : (
+                          <XCircle className="text-red-500" />
+                        )}
+                        <span className="text-gray-900">{check.name}</span>
+                        {check.details && <span className="text-gray-700">({check.details})</span>}
                       </div>
                     ))}
                   </div>

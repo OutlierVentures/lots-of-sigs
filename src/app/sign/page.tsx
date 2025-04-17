@@ -6,14 +6,15 @@ import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
 import { SignedMessage } from '../types/message';
 import { Button } from '../components/ui/Button';
 import { CHAINS } from '../../lib/cosmos/chains';
-import { SUBSTRATE_CHAINS } from '../../lib/substrate/chains';
+import { SUBSTRATE_CHAINS, getAllChains } from '../../lib/substrate/chains';
 import { Copy, Download, PenLine, Wallet, LogOut } from 'lucide-react';
+import { isValidChainId, getDefaultChain } from '../../lib/substrate/chain-utils';
 
 export default function SignPage() {
   const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
   const [message, setMessage] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
-  const [selectedChainId, setSelectedChainId] = useState<string>(SUBSTRATE_CHAINS[0].name);
+  const [selectedChainId, setSelectedChainId] = useState<string>(getDefaultChain().name);
   const [signature, setSignature] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,9 +128,9 @@ export default function SignPage() {
         </option>
       ));
     } else if (selectedNetwork === 'polkadot') {
-      return SUBSTRATE_CHAINS.map((chain) => (
+      return getAllChains().map((chain) => (
         <option key={chain.name} value={chain.name}>
-          {chain.name}
+          {chain.displayName}
         </option>
       ));
     }
@@ -161,7 +162,7 @@ export default function SignPage() {
               );
               setSelectedChainId(
                 e.target.value === 'cosmos' ? 'cosmoshub-4' :
-                e.target.value === 'polkadot' ? SUBSTRATE_CHAINS[0].name :
+                e.target.value === 'polkadot' ? getDefaultChain().name :
                 ''
               );
             }}
