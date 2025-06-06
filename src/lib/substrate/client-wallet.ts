@@ -38,6 +38,16 @@ export class SubstrateWallet {
         throw new Error('No accounts found');
       }
 
+      // Validate addresses using decodeAddress
+      const { decodeAddress } = await import('@polkadot/util-crypto');
+      for (const account of accounts) {
+        try {
+          decodeAddress(account.address);
+        } catch (error) {
+          throw new Error('Invalid address format');
+        }
+      }
+
       // Cast accounts to InjectedAccountWithSigner
       this.accounts = accounts as InjectedAccountWithSigner[];
       this.chain = chain;

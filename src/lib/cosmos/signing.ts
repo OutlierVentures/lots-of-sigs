@@ -212,23 +212,33 @@ export async function verifySignature(
     const r = sigBytes.slice(0, 32);
     const s = sigBytes.slice(32, 64);
     
-    // Ensure r and s are properly padded to 32 bytes
-    const paddedR = new Uint8Array(32);
-    const paddedS = new Uint8Array(32);
-    paddedR.set(r, 32 - r.length);
-    paddedS.set(s, 32 - s.length);
+    // Remove any leading zeros from r and s before creating the signature
+    const trimLeadingZeros = (bytes: Uint8Array): Uint8Array => {
+      let start = 0;
+      while (start < bytes.length && bytes[start] === 0) {
+        start++;
+      }
+      // Ensure we don't remove all bytes
+      if (start === bytes.length) {
+        return new Uint8Array([0]);
+      }
+      return bytes.slice(start);
+    };
+
+    const trimmedR = trimLeadingZeros(r);
+    const trimmedS = trimLeadingZeros(s);
     
     // Try both possible recovery parameters (0 and 1)
     let isValid = false;
     for (let v = 0; v <= 1; v++) {
-        const sig = new ExtendedSecp256k1Signature(paddedR, paddedS, v);
-        console.log('Trying signature with recovery param:', v, {
-            r: Buffer.from(sig.r(32)).toString('hex'),
-            s: Buffer.from(sig.s(32)).toString('hex'),
-            recovery: v,
-        });
-        
         try {
+            const sig = new ExtendedSecp256k1Signature(trimmedR, trimmedS, v);
+            console.log('Trying signature with recovery param:', v, {
+                r: Buffer.from(trimmedR).toString('hex'),
+                s: Buffer.from(trimmedS).toString('hex'),
+                recovery: v,
+            });
+            
             isValid = await Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
             if (isValid) {
                 console.log('Signature verified with recovery param:', v);
