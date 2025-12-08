@@ -134,18 +134,18 @@ export default function SignPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign Message</h1>
+    <div className="py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Sign Message</h1>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Network Type</label>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Network Type</label>
           <select
             value={selectedNetwork}
             onChange={(e) => {
@@ -162,7 +162,7 @@ export default function SignPage() {
                 ''
               );
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
             disabled={isConnected}
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
@@ -173,13 +173,13 @@ export default function SignPage() {
 
         {(selectedNetwork === 'cosmos' || selectedNetwork === 'polkadot') && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
               {selectedNetwork === 'cosmos' ? 'Cosmos Chain' : 'Polkadot Chain'}
             </label>
             <select
               value={selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
               disabled={isConnected}
             >
               {getChainOptions()}
@@ -188,11 +188,11 @@ export default function SignPage() {
         )}
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Wallet Type</label>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Wallet Type</label>
           <select
             value={walletType}
             onChange={(e) => setWalletType(e.target.value as WalletType)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
             disabled={isConnected}
           >
             {getWalletOptions()}
@@ -200,10 +200,10 @@ export default function SignPage() {
         </div>
 
         {!isConnected ? (
-          <button
+          <Button
             onClick={handleConnect}
             disabled={isLoading}
-            className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="w-full flex justify-center items-center gap-2"
           >
             {isLoading ? 'Connecting...' : (
               <>
@@ -211,34 +211,34 @@ export default function SignPage() {
                 Connect Wallet
               </>
             )}
-          </button>
+          </Button>
         ) : (
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-900">Connected Address</label>
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Connected Address</label>
               </div>
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                <p className="text-sm font-mono break-all text-gray-900">{address}</p>
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
+                <p className="text-sm font-mono break-all text-gray-900 dark:text-gray-100">{address}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Message</label>
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Message</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 rows={4}
                 placeholder="Enter message to sign"
               />
             </div>
 
             <div className="flex space-x-4">
-              <button
+              <Button
                 onClick={handleSign}
                 disabled={isLoading || !message.trim()}
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2"
               >
                 {isLoading ? 'Signing...' : (
                   <>
@@ -246,46 +246,47 @@ export default function SignPage() {
                     Sign Message
                   </>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={handleDisconnect}
                 disabled={isLoading}
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
                 Disconnect
-              </button>
+              </Button>
             </div>
 
             {signature && (
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-900">Signature</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Signature</label>
                     <Button
                       variant="default"
                       size="sm"
                       onClick={() => handleCopy(signature)}
-                      className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      className="flex items-center gap-2"
                     >
                       <Copy className="h-4 w-4" />
                       Copy
                     </Button>
                   </div>
-                  <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <p className="text-sm font-mono break-all text-gray-900">{signature}</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
+                    <p className="text-sm font-mono break-all text-gray-900 dark:text-gray-100">{signature}</p>
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-900">Signed Message JSON</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Signed Message JSON</label>
                     <div className="flex gap-2">
                       <Button
                         variant="default"
                         size="sm"
                         onClick={() => handleCopy(signedMessage)}
-                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="flex items-center gap-2"
                       >
                         <Copy className="h-4 w-4" />
                         Copy
@@ -311,15 +312,15 @@ export default function SignPage() {
                           document.body.removeChild(a);
                           URL.revokeObjectURL(url);
                         }}
-                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="flex items-center gap-2"
                       >
                         <Download className="h-4 w-4" />
                         Download
                       </Button>
                     </div>
                   </div>
-                  <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <pre className="text-sm font-mono break-all text-gray-900 whitespace-pre-wrap overflow-x-auto">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
+                    <pre className="text-sm font-mono break-all text-gray-900 dark:text-gray-100 whitespace-pre-wrap overflow-x-auto">
                       {signedMessage}
                     </pre>
                   </div>

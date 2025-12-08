@@ -206,18 +206,18 @@ export default function VerifyPage() {
   }, [address, selectedNetwork]);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Verify Message</h1>
+    <div className="py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Verify Message</h1>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Network Type</label>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Network Type</label>
           <select
             value={selectedNetwork}
             onChange={(e) => {
@@ -225,7 +225,7 @@ export default function VerifyPage() {
               setSelectedChainId('');
               setDetectedChain(null);
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
             <option value="cosmos">Cosmos</option>
@@ -235,11 +235,11 @@ export default function VerifyPage() {
 
         {selectedNetwork === 'cosmos' && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 mb-2">Chain</label>
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Chain</label>
             <select
               value={selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value as CosmosChainId)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
             >
               {Object.entries(CHAINS).map(([id, config]) => (
                 <option key={id} value={id}>
@@ -252,13 +252,13 @@ export default function VerifyPage() {
 
         {selectedNetwork === 'polkadot' && (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
               Chain
             </label>
             <select
               value={selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value)}
-              className="w-full p-2 border rounded text-gray-900"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded text-gray-900 dark:text-gray-100"
             >
               <option value="">Select a chain</option>
               {getAllChains().map((chain) => (
@@ -268,7 +268,7 @@ export default function VerifyPage() {
               ))}
             </select>
             {detectedChain && (
-              <p className="mt-2 text-sm text-gray-900">
+              <p className="mt-2 text-sm text-gray-900 dark:text-gray-100">
                 Detected chain: {detectedChain.displayName}
               </p>
             )}
@@ -277,7 +277,7 @@ export default function VerifyPage() {
 
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-900">Signed Message JSON</label>
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Signed Message JSON</label>
             <div className="flex gap-2">
               <Button
                 variant="default"
@@ -291,7 +291,7 @@ export default function VerifyPage() {
                     setError('Failed to read from clipboard');
                   }
                 }}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="flex items-center gap-2"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -308,7 +308,7 @@ export default function VerifyPage() {
                   input.onchange = handleFileUpload;
                   input.click();
                 }}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                className="flex items-center gap-2"
               >
                 <Upload className="h-4 w-4" />
                 Upload
@@ -318,41 +318,41 @@ export default function VerifyPage() {
           <textarea
             value={jsonInput}
             onChange={handleJsonInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             rows={10}
             placeholder="Paste the signed message JSON here or upload a file..."
           />
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Message</label>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Message</label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             rows={4}
             placeholder="Enter the message to verify..."
           />
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Signature</label>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Signature</label>
           <textarea
             value={signature}
             onChange={(e) => setSignature(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 font-mono"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 font-mono placeholder:text-gray-500 dark:placeholder:text-gray-400"
             rows={4}
             placeholder="Enter the signature to verify..."
           />
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Address</label>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Address</label>
           <input
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             placeholder="Enter the signer's address..."
           />
         </div>
@@ -361,7 +361,7 @@ export default function VerifyPage() {
           <Button
             onClick={() => handleVerify()}
             disabled={!message || !signature || !address || !selectedNetwork || isLoading}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+            className="flex items-center gap-2"
           >
             {isLoading ? 'Verifying...' : (
               <>
@@ -375,20 +375,20 @@ export default function VerifyPage() {
         {verificationResult !== null && (
           <div id="verification-result" className="space-y-6">
             <div className={`p-4 rounded-md border ${
-              verificationResult ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+              verificationResult ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
             }`}>
               <p className={`text-sm ${
-                verificationResult ? 'text-green-600' : 'text-red-600'
+                verificationResult ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {verificationMessage}
               </p>
             </div>
 
             {verificationDetails && (
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Verification Details</h3>
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Verification Details</h3>
                 <div className="space-y-2">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     Network: <span className="font-medium">{verificationDetails.network}</span>
                     {verificationDetails.chain && (
                       <span className="ml-2">
@@ -400,12 +400,12 @@ export default function VerifyPage() {
                     {verificationDetails.checks.map((check, index) => (
                       <div key={index} className="flex items-center gap-2">
                         {check.passed ? (
-                          <CheckCircle2 className="text-green-500" />
+                          <CheckCircle2 className="text-green-500 dark:text-green-400" />
                         ) : (
-                          <XCircle className="text-red-500" />
+                          <XCircle className="text-red-500 dark:text-red-400" />
                         )}
-                        <span className="text-gray-900">{check.name}</span>
-                        {check.details && <span className="text-gray-700">{check.details}</span>}
+                        <span className="text-gray-900 dark:text-gray-100">{check.name}</span>
+                        {check.details && <span className="text-gray-700 dark:text-gray-300">{check.details}</span>}
                       </div>
                     ))}
                   </div>
