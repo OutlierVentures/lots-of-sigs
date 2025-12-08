@@ -22,17 +22,17 @@ export const Heading = React.forwardRef<HTMLHeadingElement, HeadingProps>(({
   children,
   ...props 
 }, ref) => {
-  const Component = as || `h${level}` as keyof JSX.IntrinsicElements;
+  const Component = (as || `h${level}`) as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
   const baseStyles = 'text-gray-900 dark:text-gray-100';
   
-  return (
-    <Component
-      ref={ref}
-      className={cn(baseStyles, headingStyles[level], className)}
-      {...props}
-    >
-      {children}
-    </Component>
+  return React.createElement(
+    Component,
+    {
+      ref,
+      className: cn(baseStyles, headingStyles[level], className),
+      ...props
+    },
+    children
   );
 });
 

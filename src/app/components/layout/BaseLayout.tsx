@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PenLine, CheckCircle2 } from 'lucide-react';
 import { NavLink } from '../ui/NavLink';
-import { Heading } from '../ui/Heading';
+import { Text } from '../ui/Text';
 
 interface BaseLayoutProps {
   children: React.ReactNode;
@@ -21,9 +21,9 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({ children }) => {
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/" className="flex items-center gap-2">
                   <Image src="/signature.svg" alt="Signature" width={24} height={24} className="dark:brightness-0 dark:invert" />
-                  <Heading level={5} as="span" className="text-xl font-bold">
+                  <Text as="span" className="text-xl font-bold">
                     Lots Of Sigs
-                  </Heading>
+                  </Text>
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
