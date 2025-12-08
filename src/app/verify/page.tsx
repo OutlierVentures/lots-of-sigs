@@ -2,6 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
+import { FormField } from '@/app/components/ui/FormField';
+import { ErrorMessage } from '@/app/components/ui/ErrorMessage';
+import { PageContainer } from '@/app/components/ui/PageContainer';
+import { PageHeading } from '@/app/components/ui/PageHeading';
+import { Label } from '@/components/ui/Label';
+import { Text } from '@/app/components/ui/Text';
+import { Heading } from '@/app/components/ui/Heading';
 import { NetworkType, CosmosChainId } from '@/app/types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { getChainByAddress, SubstrateChain, getAllChains } from '@/lib/substrate/chains';
@@ -207,58 +217,46 @@ export default function VerifyPage() {
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Verify Message</h1>
+      <PageContainer>
+        <PageHeading>Verify Message</PageHeading>
         
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
+        {error && <ErrorMessage message={error} />}
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Network Type</label>
-          <select
+        <FormField label="Network Type">
+          <Select
             value={selectedNetwork}
             onChange={(e) => {
               setSelectedNetwork(e.target.value as NetworkType);
               setSelectedChainId('');
               setDetectedChain(null);
             }}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
             <option value="cosmos">Cosmos</option>
             <option value="polkadot">Polkadot/Substrate</option>
-          </select>
-        </div>
+          </Select>
+        </FormField>
 
         {selectedNetwork === 'cosmos' && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Chain</label>
-            <select
+          <FormField label="Chain">
+            <Select
               value={selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value as CosmosChainId)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
             >
               {Object.entries(CHAINS).map(([id, config]) => (
                 <option key={id} value={id}>
                   {config.chainName}
                 </option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         )}
 
         {selectedNetwork === 'polkadot' && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Chain
-            </label>
-            <select
+          <FormField label="Chain" className="mb-4">
+            <Select
               value={selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value)}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded text-gray-900 dark:text-gray-100"
             >
               <option value="">Select a chain</option>
               {getAllChains().map((chain) => (
@@ -266,18 +264,18 @@ export default function VerifyPage() {
                   {chain.displayName}
                 </option>
               ))}
-            </select>
+            </Select>
             {detectedChain && (
-              <p className="mt-2 text-sm text-gray-900 dark:text-gray-100">
+              <Text className="mt-2 text-sm">
                 Detected chain: {detectedChain.displayName}
-              </p>
+              </Text>
             )}
-          </div>
+          </FormField>
         )}
 
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Signed Message JSON</label>
+            <Label>Signed Message JSON</Label>
             <div className="flex gap-2">
               <Button
                 variant="default"
@@ -315,47 +313,41 @@ export default function VerifyPage() {
               </Button>
             </div>
           </div>
-          <textarea
+          <Textarea
             value={jsonInput}
             onChange={handleJsonInputChange}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             rows={10}
             placeholder="Paste the signed message JSON here or upload a file..."
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Message</label>
-          <textarea
+        <FormField label="Message">
+          <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             rows={4}
             placeholder="Enter the message to verify..."
           />
-        </div>
+        </FormField>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Signature</label>
-          <textarea
+        <FormField label="Signature">
+          <Textarea
             value={signature}
             onChange={(e) => setSignature(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 font-mono placeholder:text-gray-500 dark:placeholder:text-gray-400"
             rows={4}
             placeholder="Enter the signature to verify..."
+            className="font-mono"
           />
-        </div>
+        </FormField>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Address</label>
-          <input
+        <FormField label="Address">
+          <Input
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             placeholder="Enter the signer's address..."
           />
-        </div>
+        </FormField>
 
         <div className="flex justify-end mb-6">
           <Button
@@ -386,16 +378,16 @@ export default function VerifyPage() {
 
             {verificationDetails && (
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Verification Details</h3>
+                <Heading level={5} as="h3" className="text-sm mb-3">Verification Details</Heading>
                 <div className="space-y-2">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <Text variant="muted" className="text-sm">
                     Network: <span className="font-medium">{verificationDetails.network}</span>
                     {verificationDetails.chain && (
                       <span className="ml-2">
                         Chain: <span className="font-medium">{verificationDetails.chain}</span>
                       </span>
                     )}
-                  </div>
+                  </Text>
                   <div className="space-y-2">
                     {verificationDetails.checks.map((check, index) => (
                       <div key={index} className="flex items-center gap-2">
@@ -404,8 +396,8 @@ export default function VerifyPage() {
                         ) : (
                           <XCircle className="text-red-500 dark:text-red-400" />
                         )}
-                        <span className="text-gray-900 dark:text-gray-100">{check.name}</span>
-                        {check.details && <span className="text-gray-700 dark:text-gray-300">{check.details}</span>}
+                        <Text>{check.name}</Text>
+                        {check.details && <Text variant="muted" className="text-sm">{check.details}</Text>}
                       </div>
                     ))}
                   </div>
@@ -414,7 +406,7 @@ export default function VerifyPage() {
             )}
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 } 

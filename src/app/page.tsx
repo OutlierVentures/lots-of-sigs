@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { Card, CardContent, CardFooter, CardHeader } from './components/ui/Card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
 import { Button } from './components/ui/Button';
+import { Heading } from './components/ui/Heading';
+import { Text } from './components/ui/Text';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,23 +13,23 @@ export default function Home() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
+        <Heading level={1} className="tracking-tight">
           Lots Of Sigs
-        </h1>
-        <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
+        </Heading>
+        <Text variant="muted" className="mt-6 text-lg leading-8">
           Sign and verify messages using your blockchain wallet. Support for multiple networks and wallets.
-        </p>
+        </Text>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Card>
           <CardHeader>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Sign Messages</h2>
+            <CardTitle>Sign Messages</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 dark:text-gray-400">
+            <CardDescription className="text-base">
               Sign messages using your blockchain wallet. Your signature proves that you are the owner of the address.
-            </p>
+            </CardDescription>
           </CardContent>
           <CardFooter>
             <Button asChild>
@@ -38,12 +40,12 @@ export default function Home() {
 
         <Card>
           <CardHeader>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Verify Messages</h2>
+            <CardTitle>Verify Messages</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 dark:text-gray-400">
+            <CardDescription className="text-base">
               Verify signed messages to confirm their authenticity. Check if the signature matches the claimed address.
-            </p>
+            </CardDescription>
           </CardContent>
           <CardFooter>
             <Button asChild>

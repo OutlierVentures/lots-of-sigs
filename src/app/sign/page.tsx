@@ -5,6 +5,14 @@ import { useWallet } from '../providers/WalletProvider';
 import { NetworkType, WalletType } from '../types/wallet';
 import { SignedMessage } from '../types/message';
 import { Button } from '../components/ui/Button';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
+import { FormField } from '../components/ui/FormField';
+import { ErrorMessage } from '../components/ui/ErrorMessage';
+import { CodeDisplay } from '../components/ui/CodeDisplay';
+import { PageContainer } from '../components/ui/PageContainer';
+import { PageHeading } from '../components/ui/PageHeading';
+import { Label } from '@/components/ui/Label';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { getAllChains } from '../../lib/substrate/chains';
 import { Copy, Download, PenLine, Wallet, LogOut } from 'lucide-react';
@@ -135,18 +143,13 @@ export default function SignPage() {
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Sign Message</h1>
+      <PageContainer>
+        <PageHeading>Sign Message</PageHeading>
         
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
+        {error && <ErrorMessage message={error} />}
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Network Type</label>
-          <select
+        <FormField label="Network Type">
+          <Select
             value={selectedNetwork}
             onChange={(e) => {
               setSelectedNetwork(e.target.value as NetworkType);
@@ -162,42 +165,35 @@ export default function SignPage() {
                 ''
               );
             }}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
             disabled={isConnected}
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
             <option value="cosmos">Cosmos</option>
             <option value="polkadot">Polkadot</option>
-          </select>
-        </div>
+          </Select>
+        </FormField>
 
         {(selectedNetwork === 'cosmos' || selectedNetwork === 'polkadot') && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-              {selectedNetwork === 'cosmos' ? 'Cosmos Chain' : 'Polkadot Chain'}
-            </label>
-            <select
+          <FormField label={selectedNetwork === 'cosmos' ? 'Cosmos Chain' : 'Polkadot Chain'}>
+            <Select
               value={selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
               disabled={isConnected}
             >
               {getChainOptions()}
-            </select>
-          </div>
+            </Select>
+          </FormField>
         )}
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Wallet Type</label>
-          <select
+        <FormField label="Wallet Type">
+          <Select
             value={walletType}
             onChange={(e) => setWalletType(e.target.value as WalletType)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100"
             disabled={isConnected}
           >
             {getWalletOptions()}
-          </select>
-        </div>
+          </Select>
+        </FormField>
 
         {!isConnected ? (
           <Button
@@ -214,25 +210,18 @@ export default function SignPage() {
           </Button>
         ) : (
           <div className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Connected Address</label>
-              </div>
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
-                <p className="text-sm font-mono break-all text-gray-900 dark:text-gray-100">{address}</p>
-              </div>
-            </div>
+            <FormField label="Connected Address">
+              <CodeDisplay>{address}</CodeDisplay>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Message</label>
-              <textarea
+            <FormField label="Message">
+              <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 rows={4}
                 placeholder="Enter message to sign"
               />
-            </div>
+            </FormField>
 
             <div className="flex space-x-4">
               <Button
@@ -262,7 +251,7 @@ export default function SignPage() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Signature</label>
+                    <Label>Signature</Label>
                     <Button
                       variant="default"
                       size="sm"
@@ -273,14 +262,12 @@ export default function SignPage() {
                       Copy
                     </Button>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
-                    <p className="text-sm font-mono break-all text-gray-900 dark:text-gray-100">{signature}</p>
-                  </div>
+                  <CodeDisplay>{signature}</CodeDisplay>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">Signed Message JSON</label>
+                    <Label>Signed Message JSON</Label>
                     <div className="flex gap-2">
                       <Button
                         variant="default"
@@ -319,17 +306,13 @@ export default function SignPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-600">
-                    <pre className="text-sm font-mono break-all text-gray-900 dark:text-gray-100 whitespace-pre-wrap overflow-x-auto">
-                      {signedMessage}
-                    </pre>
-                  </div>
+                  <CodeDisplay as="pre">{signedMessage}</CodeDisplay>
                 </div>
               </div>
             )}
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 } 

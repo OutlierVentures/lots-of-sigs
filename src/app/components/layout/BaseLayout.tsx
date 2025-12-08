@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PenLine, CheckCircle2 } from 'lucide-react';
+import { NavLink } from '../ui/NavLink';
+import { Heading } from '../ui/Heading';
 
 interface BaseLayoutProps {
   children: React.ReactNode;
@@ -17,26 +19,22 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({ children }) => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2">
                   <Image src="/signature.svg" alt="Signature" width={24} height={24} className="dark:brightness-0 dark:invert" />
-                  Lots Of Sigs
+                  <Heading level={5} as="span" className="text-xl font-bold">
+                    Lots Of Sigs
+                  </Heading>
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link
-                  href="/sign"
-                  className="border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center gap-1 px-1 pt-1 border-b-2 text-sm font-medium"
-                >
+                <NavLink href="/sign">
                   <PenLine className="w-4 h-4" />
                   Sign Message
-                </Link>
-                <Link
-                  href="/verify"
-                  className="border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-700 dark:hover:text-gray-200 inline-flex items-center gap-1 px-1 pt-1 border-b-2 text-sm font-medium"
-                >
+                </NavLink>
+                <NavLink href="/verify">
                   <CheckCircle2 className="w-4 h-4" />
                   Verify Message
-                </Link>
+                </NavLink>
               </div>
             </div>
           </div>

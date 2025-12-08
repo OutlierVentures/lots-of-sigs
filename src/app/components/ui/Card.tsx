@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/app/utils/cn';
+import { Heading } from './Heading';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -87,13 +88,15 @@ interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
 export const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className, children, ...props }, ref) => {
     return (
-      <h3
+      <Heading
         ref={ref}
-        className={cn('text-2xl font-semibold leading-none tracking-tight text-gray-900 dark:text-gray-100', className)}
+        level={2}
+        as="h3"
+        className={cn('leading-none tracking-tight', className)}
         {...props}
       >
         {children}
-      </h3>
+      </Heading>
     );
   }
 );
@@ -109,7 +112,7 @@ export const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescri
     return (
       <p
         ref={ref}
-        className={cn('text-sm text-gray-500 dark:text-gray-400', className)}
+        className={cn('text-sm text-gray-600 dark:text-gray-400', className)}
         {...props}
       >
         {children}
