@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '../providers/WalletProvider';
-import { NetworkType, WalletType, CosmosChainId } from '../types/wallet';
+import { NetworkType, WalletType } from '../types/wallet';
 import { SignedMessage } from '../types/message';
 import { Button } from '../components/ui/Button';
 import { CHAINS } from '../../lib/cosmos/chains';
-import { SUBSTRATE_CHAINS, getAllChains } from '../../lib/substrate/chains';
+import { getAllChains } from '../../lib/substrate/chains';
 import { Copy, Download, PenLine, Wallet, LogOut } from 'lucide-react';
-import { isValidChainId, getDefaultChain } from '../../lib/substrate/chain-utils';
+import { getDefaultChain } from '../../lib/substrate/chain-utils';
 import { parseSignature } from '@/lib/signature/format';
 
 export default function SignPage() {
-  const { isConnected, address, network, chainId, error: walletError, actions } = useWallet();
+  const { isConnected, address, network, chainId: _chainId, error: walletError, actions } = useWallet();
   const [message, setMessage] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkType>('ethereum');
   const [selectedChainId, setSelectedChainId] = useState<string>(getDefaultChain().name);

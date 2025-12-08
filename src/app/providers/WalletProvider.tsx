@@ -2,14 +2,11 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { BrowserProvider, JsonRpcSigner } from 'ethers';
-import { SignedMessage } from '../types/message';
 import { createWalletConnectProvider, cleanupWalletConnectProvider } from '../config/walletConnect';
-import { NetworkType, WalletType, WalletContextType, WalletState, CosmosChainId } from '../types/wallet';
-import { createSignature, createSignDoc } from '../../lib/cosmos/signing';
-import { hash } from '../../lib/utils';
+import { NetworkType, WalletType, WalletContextType, WalletState } from '../types/wallet';
+import { createSignDoc } from '../../lib/cosmos/signing';
 import { SubstrateWallet } from '../../lib/substrate/client-wallet';
 import { getAllChains, getChainByName } from '../../lib/substrate/chains';
-import { CHAINS } from '../../lib/cosmos/chains';
 import WalletConnectProvider from '@walletconnect/ethereum-provider';
 import { isValidChainId } from '../../lib/substrate/chain-utils';
 
@@ -234,9 +231,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
           // Request account access
           console.log('WalletProvider: Requesting accounts from MetaMask');
-          const accounts = await window.ethereum.request({ 
+          const accounts = (await window.ethereum.request({ 
             method: 'eth_requestAccounts' 
-          });
+          })) as string[];
           console.log('WalletProvider: Got accounts from MetaMask', accounts);
           
           if (!accounts || accounts.length === 0) {
@@ -263,7 +260,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('WalletProvider: Failed to connect wallet:', error);
-      setState(prev => ({
+      setState(_prev => ({
         ...initialState,
         error: error instanceof Error ? error.message : 'Failed to connect wallet',
       }));

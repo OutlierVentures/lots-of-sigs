@@ -1,5 +1,4 @@
 import { NetworkType } from '@/app/types/wallet';
-import { SubstrateChain } from '@/lib/substrate/chains';
 import { verifyMessage as verifySubstrateMessage } from '@/lib/substrate/verify';
 import { verifyMessage as verifyCosmosMessage } from '@/lib/cosmos/verify';
 import { verifyMessage as verifyEthereumMessage } from '@/lib/ethereum/verify';
@@ -182,8 +181,8 @@ export class VerificationService {
         network: data.network,
         chainId: data.chainId
       };
-    } catch (error) {
-      return null;
-    }
+      } catch (_error) {
+        return null;
+      }
   }
 } 

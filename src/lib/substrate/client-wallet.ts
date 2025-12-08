@@ -43,7 +43,7 @@ export class SubstrateWallet {
       for (const account of accounts) {
         try {
           decodeAddress(account.address);
-        } catch (error) {
+        } catch (_error) {
           throw new Error('Invalid address format');
         }
       }
@@ -84,7 +84,7 @@ export class SubstrateWallet {
     return this.chain;
   }
 
-  async signMessage(message: string, address: string, chain: SubstrateChain): Promise<string> {
+  async signMessage(message: string, address: string, _chain: SubstrateChain): Promise<string> {
     if (!this.isConnected()) {
       throw new Error('Wallet not connected');
     }
@@ -95,7 +95,8 @@ export class SubstrateWallet {
     }
 
     // Get the extension
-    const extension = (window as any).injectedWeb3?.[account.meta.source];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const extension = (window as { injectedWeb3?: Record<string, any> }).injectedWeb3?.[account.meta.source] as { enable: (name: string) => Promise<{ signer: { signRaw: (data: { address: string; data: string; type: string }) => Promise<{ signature: string }> } }> } | undefined;
     if (!extension) {
       throw new Error('Extension not found');
     }

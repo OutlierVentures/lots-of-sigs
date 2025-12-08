@@ -60,7 +60,7 @@ jest.mock('@polkadot/keyring', () => {
 
 import { SubstrateWallet } from '../lib/substrate/client-wallet';
 import { SUBSTRATE_CHAINS } from '../lib/substrate/chains';
-import { signMessage, verifyMessage, SignedMessage } from '../lib/substrate/signing';
+import { verifyMessage, SignedMessage } from '../lib/substrate/signing';
 
 describe('Substrate Integration', () => {
   let wallet: SubstrateWallet;

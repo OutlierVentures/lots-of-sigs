@@ -1,5 +1,4 @@
 import { determineChain, isValidChainId, getDefaultChain } from '../../lib/substrate/chain-utils';
-import { SubstrateChain } from '../../lib/substrate/chains';
 import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { u8aToHex } from '@polkadot/util';

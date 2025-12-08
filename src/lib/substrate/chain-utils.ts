@@ -34,7 +34,7 @@ export function determineChain(
     if (signatureJson.chain && isValidChainId(signatureJson.chain)) {
       return getChainByName(signatureJson.chain.toLowerCase());
     }
-  } catch (e) {
+  } catch (_e) {
     // If we can't parse as JSON and we don't have an address, return default chain
     return getDefaultChain();
   }
@@ -47,7 +47,7 @@ export function determineChain(
  * @param chainId - The chain ID to check
  * @returns True if the chain ID is valid, false otherwise
  */
-export function isValidChainId(chainId: any): boolean {
+export function isValidChainId(chainId: unknown): boolean {
   if (typeof chainId !== 'string') return false;
   return getAllChains().some(chain => chain.name.toLowerCase() === chainId.toLowerCase());
 }

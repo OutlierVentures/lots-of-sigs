@@ -1,4 +1,3 @@
-import { Keyring } from '@polkadot/keyring';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 
 export interface SubstrateChain {
@@ -82,7 +81,7 @@ export function getChainByAddress(address: string): SubstrateChain | null {
         if (encoded === address) {
           return chain;
         }
-      } catch (e) {
+      } catch (_e) {
         // Ignore encoding errors and continue to next chain
       }
     }

@@ -13,12 +13,12 @@ export interface ParsedSignature {
     sequence: string;
     fee: {
       gas: string;
-      amount: any[];
+      amount: unknown[];
     };
-    msgs: any[];
+    msgs: unknown[];
     memo: string;
   };
-  [key: string]: any; // Allow for additional fields that might be present
+  [key: string]: unknown; // Allow for additional fields that might be present
 }
 
 /**
@@ -35,7 +35,7 @@ export function parseSignature(signature: string): ParsedSignature {
     }
     // If the parsed object doesn't have a signature field, wrap it
     return { signature: signature };
-  } catch (e) {
+  } catch (_e) {
     // If parsing fails, treat the input as a raw signature
     return { signature: signature };
   }

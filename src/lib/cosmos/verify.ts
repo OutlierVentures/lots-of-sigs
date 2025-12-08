@@ -12,7 +12,7 @@ export async function verifyMessage(message: string, signature: string, address:
     const signatureData: SignatureData = {
       signature: parsedSignature.signature,
       pub_key: parsedSignature.pub_key,
-      sign_doc: parsedSignature.sign_doc
+      sign_doc: parsedSignature.sign_doc as SignatureData['sign_doc']
     };
     
     return verifySignature(signatureData, address);

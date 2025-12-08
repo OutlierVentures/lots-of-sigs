@@ -1,7 +1,6 @@
 import { Secp256k1, ExtendedSecp256k1Signature } from '@cosmjs/crypto';
 import { fromBase64, toBech32, toBase64 } from '@cosmjs/encoding';
 import { sha256, ripemd160 } from '@cosmjs/crypto';
-import { ChainConfig, getChainConfig } from './chains';
 
 export interface SignDoc {
   chain_id: string;
@@ -37,8 +36,7 @@ export interface SignatureData {
  * @param chainId - The chain ID
  * @returns The sign document
  */
-export function createSignDoc(message: string, signer: string, chainId: string = 'cosmoshub-4'): SignDoc {
-  const chainConfig = getChainConfig(chainId);
+export function createSignDoc(message: string, signer: string, _chainId: string = 'cosmoshub-4'): SignDoc {
   // Base64 encode the message as required by ADR-36
   const base64Data = Buffer.from(message).toString('base64');
   
@@ -295,7 +293,7 @@ export function extractMessage(signDoc: SignDoc): string {
     }
     // If not, return the original data
     return messageData;
-  } catch (e) {
+  } catch (_e) {
     // If base64 decoding fails, return the original data
     return messageData;
   }

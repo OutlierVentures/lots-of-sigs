@@ -1,5 +1,5 @@
-import { Secp256k1, ExtendedSecp256k1Signature } from '@cosmjs/crypto';
-import { fromBase64, toBech32, toBase64 } from '@cosmjs/encoding';
+import { Secp256k1 } from '@cosmjs/crypto';
+import { toBech32, toBase64 } from '@cosmjs/encoding';
 import { sha256, ripemd160 } from '@cosmjs/crypto';
 import {
   createSignature,

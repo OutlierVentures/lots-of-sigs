@@ -3,7 +3,7 @@ import { SubstrateChain } from './chains';
 import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
 import { signatureVerify } from '@polkadot/util-crypto';
-import { u8aToHex, hexToU8a } from '@polkadot/util';
+import { hexToU8a } from '@polkadot/util';
 import { SignedMessage as AppSignedMessage } from '../../app/types/message';
 
 export interface SignedMessage extends AppSignedMessage {
@@ -41,7 +41,7 @@ export async function signMessage(
 
 export async function verifyMessage(
   signedMessage: SignedMessage,
-  chain: SubstrateChain
+  _chain: SubstrateChain
 ): Promise<boolean> {
   await cryptoWaitReady();
   

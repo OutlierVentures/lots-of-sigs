@@ -1,18 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Textarea';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { NetworkType, CosmosChainId } from '@/app/types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
-import { SUBSTRATE_CHAINS, getChainByAddress, getChainByName, SubstrateChain, DEFAULT_CHAIN, getAllChains } from '@/lib/substrate/chains';
+import { getChainByAddress, SubstrateChain, getAllChains } from '@/lib/substrate/chains';
 import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
-import { determineChain } from '../../lib/substrate/chain-utils';
 import { VerificationService } from '@/lib/verification/verification.service';
 
 export default function VerifyPage() {
@@ -131,7 +124,7 @@ export default function VerifyPage() {
           }
         }
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignore JSON parsing errors as the user might be in the middle of typing
     }
   };

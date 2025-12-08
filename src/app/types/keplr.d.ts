@@ -50,7 +50,7 @@ declare global {
       getOfflineSigner: (chainId: string) => OfflineAminoSigner;
       getKey: (chainId: string) => Promise<KeplrKey>;
       signArbitrary: (chainId: string, signer: string, data: string) => Promise<KeplrSignature>;
-      signAmino: (chainId: string, signer: string, signDoc: any) => Promise<AminoSignResponse>;
+      signAmino: (chainId: string, signer: string, signDoc: unknown) => Promise<AminoSignResponse>;
     };
   }
 } 
