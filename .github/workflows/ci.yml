@@ -91,6 +91,6 @@ jobs:
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
-          ssh -o IdentitiesOnly=yes -o BatchMode=yes \
+          ssh -o BatchMode=yes \
             "github-deploy@${DEPLOY_HOST}" \
             "lots-of-sigs ${{ needs.image.outputs.tag }}"
