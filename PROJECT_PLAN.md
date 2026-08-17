@@ -86,6 +86,7 @@ A privacy-first web application for cryptographically signing and verifying mess
   - [x] Improved error handling
   - [x] Signature file download/upload support
   - [x] Standardized filename format for downloads
+- [x] GitHub Actions CI (lint, test, build on Node.js 24)
 
 ## Current Focus
 - Final project review

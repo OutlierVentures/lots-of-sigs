@@ -34,6 +34,7 @@
 - [x] Improved verification result display
 - [x] Test WalletConnect end to end with a Safe{Wallet}
 - [x] Download/upload for signatures
+- [x] GitHub Actions CI for lint, test, and production build
 - [ ] Robust support for different Polkadot address types per network
 
 ## Current Focus
@@ -43,8 +44,10 @@
   - Future consideration: ESLint 10 when eslint-config-next supports it
 
 ## Completed Items
+- Docker production image builds with frozen lockfile and Next 16.3.1 Turbopack
+- GitHub Actions CI with Node.js 24 LTS and pnpm 11
 - Next.js 16.3.1 with React 19.2.8
-- CosmJS 0.39, Polkadot 16, wagmi 3, Jest 30, and TypeScript 7 (native) with TypeScript 6 for ESLint
+- CosmJS 0.39, Polkadot 16, wagmi 3, Jest 30, and TypeScript 5.9
 - Next.js project initialization with TypeScript
 - ESLint and Prettier configuration
 - Basic project structure setup

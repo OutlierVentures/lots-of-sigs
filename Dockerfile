@@ -13,9 +13,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # Install dependencies including dev dependencies
 RUN pnpm install --frozen-lockfile
 
-# Install additional required dependencies
-RUN pnpm add -D pino-pretty eslint-plugin-react-hooks @next/eslint-plugin-next
-
 # Copy source code
 COPY . .
 

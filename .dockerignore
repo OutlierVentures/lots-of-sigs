@@ -1,0 +1,35 @@
+# Dependencies and build output — the image installs from the lockfile
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+
+# Git and local tooling
+.git
+.gitignore
+.cursor
+.vscode
+.idea
+
+# Env files (build args supply NEXT_PUBLIC_* values)
+.env*
+
+# Logs and OS files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+*.pem
+
+# Tests and docs not needed in the image
+**/*.test.ts
+**/*.test.tsx
+__tests__
+README.md
+PROJECT_PLAN.md
+PROJECT_STATUS.md
+LICENSE
+.github

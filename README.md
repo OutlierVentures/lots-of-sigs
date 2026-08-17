@@ -39,8 +39,8 @@ A privacy-first web application for cryptographically signing and verifying mess
 
 ### Prerequisites
 
-- Node.js (v22 or later)
-- pnpm
+- Node.js 24 LTS (v22 or later)
+- pnpm 11
 - A supported browser:
   - Chrome
   - Brave
@@ -87,7 +87,7 @@ pnpm dev
 
 ## Docker Deployment
 
-The application can be deployed using Docker for production environments.
+The application can be deployed using Docker for production environments. The image install uses the lockfile only; do not add extra packages in the Dockerfile.
 
 ### Prerequisites
 
@@ -421,9 +421,14 @@ src/
 ### Available Scripts
 
 - `pnpm dev` - Start development server
-- `pnpm build` - Build for production
+- `pnpm build` - Build for production (Turbopack, same as `pnpm dev`)
 - `pnpm start` - Start production server
 - `pnpm lint` - Run ESLint
+- `pnpm test` - Run unit tests
+
+### Continuous Integration
+
+GitHub Actions runs lint, tests, and a production build on every push to `main` and on every pull request. The workflow uses Node.js 24 LTS and pnpm 11.
 
 ## Contributing
 
