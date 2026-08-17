@@ -1,57 +1,40 @@
 # Build stage
 FROM node:22-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Install dependencies including dev dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
 COPY . .
 
-# Set build arguments for environment variables
 ARG NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application
 RUN pnpm build
 
-# Production stage
+# Production stage — Next.js standalone output (no pnpm in the runner)
 FROM node:22-alpine AS runner
 
-# Set working directory
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy necessary files from builder
-COPY --from=builder /app/package.json .
-COPY --from=builder /app/pnpm-lock.yaml .
-COPY --from=builder /app/pnpm-workspace.yaml .
-COPY --from=builder /app/next.config.ts .
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-
-# Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
-
-# Set environment variables
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Re-declare the build arg and set it as an environment variable
-ARG NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+RUN addgroup --system --gid 1001 nodejs \
+	&& adduser --system --uid 1001 nextjs
 
-# Expose the port
-EXPOSE ${PORT:-3000}
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Start the application
-CMD ["pnpm", "start"] 
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

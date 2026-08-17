@@ -87,60 +87,35 @@ pnpm dev
 
 ## Docker Deployment
 
-The application can be deployed using Docker for production environments. The image install uses the lockfile only; do not add extra packages in the Dockerfile.
+The production image is a Next.js standalone build. The Dockerfile install uses the lockfile only; do not add extra packages in the Dockerfile. Production TLS stays on the host (nginx + Let’s Encrypt). Do not put certificates in the image.
 
-### Prerequisites
+### Local image
 
-- Docker installed on your system
-- Docker Compose (optional, for easier deployment)
-
-### Building the Docker Image
-
-1. Build the Docker image with the required build arguments:
 ```bash
 docker build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id -t lots-of-sigs .
+docker run --rm -p 3000:3000 lots-of-sigs
 ```
 
-### Running the Container
+Or with Compose (production bind is `127.0.0.1:3100`; override the port locally if you need 3000):
 
-1. Run the container with default port mapping (container:3000 → host:3000):
 ```bash
-docker run -p 3000:3000 lots-of-sigs
+docker compose build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+TAG=latest docker compose up
 ```
 
-2. Run the container with custom port mapping (container:3000 → host:8080):
-```bash
-docker run -p 8080:3000 lots-of-sigs
-```
+`NEXT_PUBLIC_*` values must be build args. They are baked into the client bundle.
 
-The application will be available at:
-- Default: http://localhost:3000
-- Custom port: http://localhost:8080 (or your chosen port)
+### Continuous deployment
 
-### Environment Variables
+Push to `main` (after CI) builds `ghcr.io/outlierventures/lots-of-sigs` and asks the web host to pull and swap the container. The host installer and runbook live in the System-Administration repo (`services/website-cd/`, `runbooks/website-cd.md`).
 
-There are two types of environment variables in Next.js applications:
+GitHub Actions secrets (repo):
 
-1. **Build-time Variables** (prefixed with `NEXT_PUBLIC_`):
-   - These must be provided during the Docker build process using `--build-arg`
-   - They are embedded into the client-side JavaScript during build
-   - Example: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
+- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` — WalletConnect project id (build-time)
+- `DEPLOY_HOST` — SSH hostname or IP of the web host (Wolfburn: `email-signature.outlierventures.io`)
+- `DEPLOY_SSH_KEY` — private half of the `github-deploy` key (public key is in System-Administration `services/website-cd/github-deploy.pub`)
 
-2. **Runtime Variables**:
-   - These can be provided when running the container using `-e`
-   - They are available to the server-side code
-   - Example: `PORT`
-
-Example with both types of variables:
-```bash
-# Build the image with build-time variables
-docker build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id -t lots-of-sigs .
-
-# Run the container with runtime variables
-docker run -p 8080:3000 -e PORT=3000 lots-of-sigs
-```
-
-Note: The first port number in the `-p` flag is the host port, and the second is the container port. For example, `-p 8080:3000` means the application running on port 3000 inside the container will be accessible on port 8080 on your host machine.
+Manual redeploy: Actions → CI → Run workflow (on `main`).
 
 ## Usage
 
