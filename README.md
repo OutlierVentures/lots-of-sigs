@@ -39,7 +39,7 @@ A privacy-first web application for cryptographically signing and verifying mess
 
 ### Prerequisites
 
-- Node.js (v18 or later)
+- Node.js (v20.9 or later)
 - pnpm
 - A supported browser:
   - Chrome

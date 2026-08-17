@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -14,7 +14,7 @@ import { Text } from '@/app/components/ui/Text';
 import { Heading } from '@/app/components/ui/Heading';
 import { NetworkType, CosmosChainId } from '@/app/types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
-import { getChainByAddress, SubstrateChain, getAllChains } from '@/lib/substrate/chains';
+import { getChainByAddress, getAllChains } from '@/lib/substrate/chains';
 import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { VerificationService } from '@/lib/verification/verification.service';
 
@@ -34,7 +34,10 @@ export default function VerifyPage() {
     chain?: string;
   } | null>(null);
   const [jsonInput, setJsonInput] = useState('');
-  const [detectedChain, setDetectedChain] = useState<SubstrateChain | null>(null);
+  const detectedChain =
+    selectedNetwork === 'polkadot' && address
+      ? getChainByAddress(address)
+      : null;
 
   const clearPreviousResults = () => {
     setVerificationResult(null);
@@ -151,7 +154,7 @@ export default function VerifyPage() {
       signature,
       address,
       network: selectedNetwork,
-      chainId: selectedChainId
+      chainId: detectedChain?.name || selectedChainId
     };
 
     console.log('Starting verification with:', verificationInput);
@@ -204,17 +207,6 @@ export default function VerifyPage() {
     }
   };
 
-  // Add effect to detect chain when address changes
-  useEffect(() => {
-    if (selectedNetwork === 'polkadot' && address) {
-      const chain = getChainByAddress(address);
-      setDetectedChain(chain);
-      if (chain) {
-        setSelectedChainId(chain.name);
-      }
-    }
-  }, [address, selectedNetwork]);
-
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8">
       <PageContainer>
@@ -228,7 +220,6 @@ export default function VerifyPage() {
             onChange={(e) => {
               setSelectedNetwork(e.target.value as NetworkType);
               setSelectedChainId('');
-              setDetectedChain(null);
             }}
           >
             <option value="ethereum">EVM (Ethereum, Polygon, etc.)</option>
@@ -255,7 +246,7 @@ export default function VerifyPage() {
         {selectedNetwork === 'polkadot' && (
           <FormField label="Chain" className="mb-4">
             <Select
-              value={selectedChainId}
+              value={detectedChain?.name ?? selectedChainId}
               onChange={(e) => setSelectedChainId(e.target.value)}
             >
               <option value="">Select a chain</option>

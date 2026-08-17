@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useWallet } from '../providers/WalletProvider';
 import { NetworkType, WalletType } from '../types/wallet';
 import { SignedMessage } from '../types/message';
@@ -29,13 +29,7 @@ export default function SignPage() {
   const [error, setError] = useState<string | null>(null);
   const [signedMessage, setSignedMessage] = useState<string>('');
   const [walletType, setWalletType] = useState<WalletType>('metamask');
-
-  // Update error state when wallet error changes
-  useEffect(() => {
-    if (walletError) {
-      setError(walletError);
-    }
-  }, [walletError]);
+  const displayError = error || walletError;
 
   const handleConnect = async () => {
     try {
@@ -146,7 +140,7 @@ export default function SignPage() {
       <PageContainer>
         <PageHeading>Sign Message</PageHeading>
         
-        {error && <ErrorMessage message={error} />}
+        {displayError && <ErrorMessage message={displayError} />}
 
         <FormField label="Network Type">
           <Select

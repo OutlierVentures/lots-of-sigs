@@ -12,18 +12,27 @@ export function WalletConnect() {
   const [selectedChain, setSelectedChain] = useState(SUBSTRATE_CHAINS[0].name);
 
   useEffect(() => {
-    checkConnection();
-  }, []);
+    let cancelled = false;
 
-  const checkConnection = async () => {
-    try {
-      const wallet = new SubstrateWallet();
-      const connected = await wallet.isConnected();
-      setIsConnected(connected);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to check wallet connection');
-    }
-  };
+    const checkConnection = async () => {
+      try {
+        const wallet = new SubstrateWallet();
+        const connected = await wallet.isConnected();
+        if (!cancelled) {
+          setIsConnected(connected);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to check wallet connection');
+        }
+      }
+    };
+
+    checkConnection();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleConnect = async () => {
     try {

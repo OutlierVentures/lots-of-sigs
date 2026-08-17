@@ -40,8 +40,10 @@
 - Project completion and final review
   - Documentation updates
   - Future consideration: EIP-1271 signature support for smart contract wallets
+  - Future consideration: CosmJS 0.34+ (replaces the deprecated elliptic crypto library)
 
 ## Completed Items
+- Next.js 16.3.1 with React 19.2.8 and in-range dependency updates
 - Next.js project initialization with TypeScript
 - ESLint and Prettier configuration
 - Basic project structure setup

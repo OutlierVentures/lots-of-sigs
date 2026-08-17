@@ -1,18 +1,16 @@
 'use client';
 
 import { WalletProvider } from './WalletProvider';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
+
+const emptySubscribe = () => () => {};
 
 export function ClientWalletProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   if (!mounted) {
     return null;
   }
 
   return <WalletProvider>{children}</WalletProvider>;
-} 
+}
