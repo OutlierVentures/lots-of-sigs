@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PenLine, CheckCircle2 } from 'lucide-react';
+import { PenLine, CircleCheck } from 'lucide-react';
 import { NavLink } from '../ui/NavLink';
 import { Text } from '../ui/Text';
 
@@ -32,7 +32,7 @@ export const BaseLayout: React.FC<BaseLayoutProps> = ({ children }) => {
                   Sign Message
                 </NavLink>
                 <NavLink href="/verify">
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CircleCheck className="w-4 h-4" />
                   Verify Message
                 </NavLink>
               </div>

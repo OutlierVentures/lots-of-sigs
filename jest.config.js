@@ -15,5 +15,12 @@ const customJestConfig = {
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig); 
+// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async.
+// Override transformIgnorePatterns after next/jest so ESM CosmJS/@noble packages are transformed.
+module.exports = async () => {
+  const config = await createJestConfig(customJestConfig)();
+  config.transformIgnorePatterns = [
+    '/node_modules/(?!.*(@noble|@cosmjs|@scure)/)',
+  ];
+  return config;
+}; 

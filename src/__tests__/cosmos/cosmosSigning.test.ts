@@ -15,7 +15,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create a test message
@@ -43,7 +43,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create and sign a message
@@ -82,7 +82,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create a test message
@@ -105,7 +105,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create a test message
@@ -142,7 +142,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create a test message
@@ -193,7 +193,7 @@ describe('Cosmos Signing and Verification', () => {
     const messageHash = sha256(new TextEncoder().encode(signDocString));
 
     // Sign the message
-    const signature = await Secp256k1.createSignature(messageHash, privateKey);
+    const signature = Secp256k1.createSignature(messageHash, privateKey);
     const sigBytes = new Uint8Array(64);
     sigBytes.set(signature.r(32));
     sigBytes.set(signature.s(32), 32);
@@ -226,11 +226,11 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Compress the public key
-    const compressedPubKey = await Secp256k1.compressPubkey(pubKeyBytes);
+    const compressedPubKey = Secp256k1.compressPubkey(pubKeyBytes);
 
     // Create a test message
     const message = 'test message';
@@ -266,7 +266,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create a test message
@@ -294,7 +294,7 @@ describe('Cosmos Signing and Verification', () => {
     crypto.getRandomValues(privateKey);
 
     // Get the public key
-    const publicKey = await Secp256k1.makeKeypair(privateKey);
+    const publicKey = Secp256k1.makeKeypair(privateKey);
     const pubKeyBytes = publicKey.pubkey;
 
     // Create a test message

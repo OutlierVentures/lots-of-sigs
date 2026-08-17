@@ -99,7 +99,7 @@ export async function createSignature(
   const messageHash = sha256(new TextEncoder().encode(signDocString));
 
   // Sign the message
-  const signature = await Secp256k1.createSignature(messageHash, privateKey);
+  const signature = Secp256k1.createSignature(messageHash, privateKey);
   const sigBytes = new Uint8Array(64);
   sigBytes.set(signature.r(32));
   sigBytes.set(signature.s(32), 32);
@@ -147,7 +147,7 @@ export async function verifySignature(
     if (compressedPubKeyBytes.length === 33) {
       console.log('Detected compressed public key, attempting to uncompress...');
       try {
-        pubKeyBytes = await Secp256k1.uncompressPubkey(compressedPubKeyBytes);
+        pubKeyBytes = Secp256k1.uncompressPubkey(compressedPubKeyBytes);
         console.log('Successfully uncompressed public key:', {
           compressed: Buffer.from(compressedPubKeyBytes).toString('hex'),
           uncompressed: Buffer.from(pubKeyBytes).toString('hex'),
@@ -237,7 +237,7 @@ export async function verifySignature(
                 recovery: v,
             });
             
-            isValid = await Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
+            isValid = Secp256k1.verifySignature(sig, messageHash, pubKeyBytes);
             if (isValid) {
                 console.log('Signature verified with recovery param:', v);
                 break;

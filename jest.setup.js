@@ -18,19 +18,21 @@ if (typeof TextDecoder === 'undefined') {
   };
 }
 
-// Mock crypto for tests
-global.crypto = {
-  getRandomValues: (arr) => {
-    for (let i = 0; i < arr.length; i++) {
-      arr[i] = Math.floor(Math.random() * 256);
-    }
-    return arr;
-  },
-  subtle: {
-    digest: async (algorithm, data) => {
-      const encoder = new TextEncoder();
-      const encoded = encoder.encode(data);
-      return encoded;
+// Keep the platform Web Crypto API when it exists (CosmJS 0.39 uses @noble/curves).
+if (typeof global.crypto?.getRandomValues !== 'function') {
+  global.crypto = {
+    getRandomValues: (arr) => {
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] = Math.floor(Math.random() * 256);
+      }
+      return arr;
     },
-  },
-}; 
+    subtle: {
+      digest: async (_algorithm, data) => {
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(data);
+        return encoded;
+      },
+    },
+  };
+} 

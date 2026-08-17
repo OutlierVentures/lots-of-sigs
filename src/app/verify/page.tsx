@@ -15,7 +15,7 @@ import { Heading } from '@/app/components/ui/Heading';
 import { NetworkType, CosmosChainId } from '@/app/types/wallet';
 import { CHAINS } from '../../lib/cosmos/chains';
 import { getChainByAddress, getAllChains } from '@/lib/substrate/chains';
-import { Upload, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { Upload, CircleCheck, CircleX, Search } from 'lucide-react';
 import { VerificationService } from '@/lib/verification/verification.service';
 
 export default function VerifyPage() {
@@ -383,9 +383,9 @@ export default function VerifyPage() {
                     {verificationDetails.checks.map((check, index) => (
                       <div key={index} className="flex items-center gap-2">
                         {check.passed ? (
-                          <CheckCircle2 className="text-green-500 dark:text-green-400" />
+                          <CircleCheck className="text-green-500 dark:text-green-400" />
                         ) : (
-                          <XCircle className="text-red-500 dark:text-red-400" />
+                          <CircleX className="text-red-500 dark:text-red-400" />
                         )}
                         <Text>{check.name}</Text>
                         {check.details && <Text variant="muted" className="text-sm">{check.details}</Text>}
