@@ -87,7 +87,7 @@ pnpm dev
 
 ## Docker Deployment
 
-The production image is a Next.js standalone build. The Dockerfile install uses the lockfile only; do not add extra packages in the Dockerfile. Production TLS stays on the host (nginx + Let’s Encrypt). Do not put certificates in the image.
+The production image is a Next.js standalone build (`node server.js`). pnpm’s nested `node_modules` drops `@swc/helpers` from that tree unless the linker is hoisted and the helpers package is a direct dependency; the Dockerfile also copies helpers in and fails the build if `server.js` exits. Production TLS stays on the host (nginx + Let’s Encrypt). Do not put certificates in the image.
 
 ### Local image
 
@@ -118,6 +118,8 @@ GitHub Actions secrets (repo):
 Manual redeploy: Actions → CI → Run workflow (on `main`).
 
 The image may be a public or private GHCR package. A private package needs a `read:packages` pull token on the web host (`ov-website-cd-ghcr-auth.sh` in System-Administration). The workflow does not change package visibility.
+
+The deploy hop uses `webfactory/ssh-agent`. Do not add `IdentitiesOnly=yes` unless the `ssh` command also passes `-i` for that key; without `-i`, ssh ignores the agent and GitHub gets `Permission denied (publickey)`. Host keys live in `.github/known_hosts`. CI smoke-tests `GET /` on the image before it asks the host to swap.
 
 ## Usage
 
