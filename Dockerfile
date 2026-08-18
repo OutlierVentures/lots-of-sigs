@@ -6,6 +6,9 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Hoisted node_modules so Next standalone traces pnpm deps (e.g. @swc/helpers).
+# Same lockfile; no extra packages.
+RUN printf '%s\n' 'node-linker=hoisted' >> .npmrc
 RUN pnpm install --frozen-lockfile
 
 COPY . .
