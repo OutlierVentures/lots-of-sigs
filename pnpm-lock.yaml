@@ -38,6 +38,9 @@ importers:
       '@polkadot/util-crypto':
         specifier: ^14.0.3
         version: 14.0.3(@polkadot/util@14.0.3)
+      '@swc/helpers':
+        specifier: 0.5.23
+        version: 0.5.23
       '@walletconnect/ethereum-provider':
         specifier: ^2.23.10
         version: 2.23.10(@types/react@19.2.18)(bufferutil@4.1.0)(debug@4.4.3(supports-color@8.1.1))(fastestsmallesttextencoderdecoder@1.0.22)(react@19.2.8)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.8))(utf-8-validate@5.0.10)(zod@3.25.76)

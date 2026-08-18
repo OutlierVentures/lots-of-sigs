@@ -69,6 +69,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Smoke-test image
+        run: |
+          img="ghcr.io/outlierventures/lots-of-sigs:${{ github.sha }}"
+          docker pull "$img"
+          cid="$(docker run -d -p 127.0.0.1:3000:3000 "$img")"
+          trap 'docker rm -f "$cid" >/dev/null' EXIT
+          for _ in $(seq 1 30); do
+            if curl -sf -o /dev/null http://127.0.0.1:3000/; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$cid"
+          exit 1
+
   deploy:
     name: Pull and swap on the web host
     needs: image
