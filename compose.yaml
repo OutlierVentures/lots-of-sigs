@@ -1,10 +1,14 @@
 services:
   lots-of-sigs:
-    image: ghcr.io/outlierventures/lots-of-sigs:${TAG:-latest}
+    image: lots-of-sigs:${TAG:-latest}
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
     container_name: lots-of-sigs
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3100:3000"
+      - "3000:3000"
     environment:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"

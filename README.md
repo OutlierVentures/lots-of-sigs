@@ -85,41 +85,26 @@ pnpm dev
 
    Note: If you changed the port in `.env.local`, replace 3000 with your chosen port number.
 
-## Docker Deployment
+## Docker
 
-The production image is a Next.js standalone build (`node server.js`). pnpm’s nested `node_modules` drops `@swc/helpers` from that tree unless the linker is hoisted and the helpers package is a direct dependency; the Dockerfile also copies helpers in and fails the build if `server.js` exits. Production TLS stays on the host (nginx + Let’s Encrypt). Do not put certificates in the image.
-
-### Local image
+The production image is a Next.js standalone build (`node server.js`). pnpm’s nested `node_modules` drops `@swc/helpers` from that tree unless the linker is hoisted and the helpers package is a direct dependency; the Dockerfile also copies helpers in and fails the build if `server.js` exits. Put TLS on a reverse proxy in front of the container. Do not put certificates in the image.
 
 ```bash
 docker build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id -t lots-of-sigs .
 docker run --rm -p 3000:3000 lots-of-sigs
 ```
 
-Or with Compose (production bind is `127.0.0.1:3100`; override the port locally if you need 3000):
+Or with Compose:
 
 ```bash
-docker compose build --build-arg NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
-TAG=latest docker compose up
+export NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+docker compose build
+docker compose up
 ```
 
 `NEXT_PUBLIC_*` values must be build args. They are baked into the client bundle.
 
-### Continuous deployment
-
-Push to `main` (after CI) builds `ghcr.io/outlierventures/lots-of-sigs` and asks the web host to pull and swap the container. The host installer and runbook live in the System-Administration repo (`services/website-cd/`, `runbooks/website-cd.md`).
-
-GitHub Actions secrets (repo):
-
-- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` — WalletConnect project id (build-time)
-- `DEPLOY_HOST` — SSH hostname or IP of the web host (Wolfburn: `email-signature.outlierventures.io`)
-- `DEPLOY_SSH_KEY` — private half of the `github-deploy` key (public key is in System-Administration `services/website-cd/github-deploy.pub`)
-
-Manual redeploy: Actions → CI → Run workflow (on `main`).
-
-The image may be a public or private GHCR package. A private package needs a `read:packages` pull token on the web host (`ov-website-cd-ghcr-auth.sh` in System-Administration). The workflow does not change package visibility.
-
-The deploy hop uses `webfactory/ssh-agent`. Do not add `IdentitiesOnly=yes` unless the `ssh` command also passes `-i` for that key; without `-i`, ssh ignores the agent and GitHub gets `Permission denied (publickey)`. Host keys live in `.github/known_hosts`. CI smoke-tests `GET /` on the image before it asks the host to swap.
+Hosting for a specific instance is not in this repository.
 
 ## Usage
 
